@@ -1,0 +1,39 @@
+
+# ============================================
+# Pokémon Bank - Simulador Bancario Académico
+# Control de versiones Git
+# ============================================
+
+# Dependencias de Node.js
+node_modules/
+
+# Archivos de registro
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Archivos temporales
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Configuración privada de NetBeans
+nbproject/private/
+
+# Archivos de entorno y credenciales
+.env
+.env.*
+!.env.example
+
+# Archivos generados de cobertura
+coverage/
+
+# Archivos temporales de pruebas
+test-results/

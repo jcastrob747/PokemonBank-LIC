@@ -1,0 +1,1434 @@
+/*
+Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+Click nbfs://nbhost/SystemFileSystem/Templates/ClientSide/css.css to edit this template
+*/
+/* 
+    Created on : Oct 9, 2026, 9:29:49 AM
+    Author     : JC
+   POKÉMON BANK Proyecto LIC - Fase 1 Hoja de estilos principal
+*/
+
+/* Colores principales */
+:root {
+    --azul-principal: #1E3A8A;
+    --azul-secundario: #2563EB;
+    --amarillo-pokemon: #FFCB05;
+    --fondo: #F3F4F6;
+    --blanco: #FFFFFF;
+    --texto: #1F2937;
+}
+
+/* Configuración general */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: var(--fondo);
+    color: var(--texto);
+}
+
+/* Pantalla de inicio de sesión */
+.login-page {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background: linear-gradient(
+        135deg,
+        var(--azul-principal),
+        var(--azul-secundario)
+    );
+}
+
+/* Tarjeta de inicio de sesión */
+.login-card {
+    background-color: var(--blanco);
+    width: 100%;
+    max-width: 420px;
+    padding: 40px 30px;
+    border-radius: 16px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+
+/* Nombre del banco */
+.bank-title {
+    font-size: 32px;
+    font-weight: bold;
+    color: var(--azul-principal);
+    margin-bottom: 10px;
+}
+
+/* Texto de bienvenida */
+.login-subtitle {
+    font-size: 16px;
+    color: #6B7280;
+    margin-bottom: 30px;
+}
+
+/* Campo PIN */
+.pin-input {
+    width: 100%;
+    padding: 14px;
+    border: 2px solid #D1D5DB;
+    border-radius: 8px;
+    font-size: 22px;
+    text-align: center;
+    letter-spacing: 8px;
+    margin-bottom: 20px;
+}
+
+.pin-input:focus {
+    outline: none;
+    border-color: var(--azul-secundario);
+}
+
+/* Botón principal */
+.btn-pokemon {
+    display: block;
+    width: 100%;
+    background-color: var(--amarillo-pokemon);
+    color: var(--texto);
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    font-size: 17px;
+    font-weight: bold;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-pokemon:hover {
+    background-color: #E6B800;
+    color: var(--texto);
+    text-decoration: none;
+}
+
+/* Pie de página */
+.login-footer {
+    margin-top: 25px;
+    font-size: 12px;
+    color: #6B7280;
+}
+
+/* Diseño responsive */
+@media (max-width: 576px) {
+
+    .login-card {
+        padding: 30px 20px;
+    }
+
+    .bank-title {
+        font-size: 27px;
+    }
+
+    .pin-input {
+        font-size: 20px;
+    }
+}
+
+/* ==========================================
+   DASHBOARD - POKÉMON BANK
+   ========================================== */
+
+/* Fondo del Dashboard */
+.dashboard-page {
+    background-color: var(--fondo);
+    min-height: 100vh;
+}
+
+/* Encabezado principal */
+.bank-header {
+    background-color: var(--azul-principal);
+    padding: 20px 0;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* Logotipo */
+.dashboard-logo {
+    color: var(--blanco);
+    font-size: 28px;
+    font-weight: bold;
+    margin: 0;
+}
+
+/* Botón cerrar sesión */
+.btn-logout {
+    background-color: var(--amarillo-pokemon);
+    color: var(--texto);
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.btn-logout:hover {
+    background-color: #E6B800;
+    color: var(--texto);
+    text-decoration: none;
+}
+
+/* Contenedor principal */
+.dashboard-container {
+    padding-top: 40px;
+    padding-bottom: 40px;
+}
+
+/* Tarjeta de información de cuenta */
+.account-card {
+    background-color: var(--blanco);
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    margin-bottom: 40px;
+    border-left: 6px solid var(--amarillo-pokemon);
+}
+
+.account-card h2 {
+    color: var(--azul-principal);
+    font-size: 26px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.account-card p {
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+.account-message {
+    color: #6B7280;
+    margin-top: 20px;
+}
+
+/* Título de operaciones */
+.section-title {
+    color: var(--azul-principal);
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 25px;
+}
+
+/* Tarjetas de operaciones */
+.operation-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    background-color: var(--blanco);
+    padding: 30px 20px;
+    min-height: 220px;
+
+    border-radius: 15px;
+    text-align: center;
+    text-decoration: none;
+
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+/* Efecto al pasar el cursor */
+.operation-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    text-decoration: none;
+}
+
+/* Iconos */
+.operation-icon {
+    font-size: 42px;
+    margin-bottom: 15px;
+}
+
+/* Títulos de operaciones */
+.operation-card h3 {
+    color: var(--azul-principal);
+    font-size: 21px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+/* Descripciones */
+.operation-card p {
+    color: #6B7280;
+    font-size: 14px;
+    margin: 0;
+}
+
+/* Pie de página */
+.dashboard-footer {
+    text-align: center;
+    padding: 20px;
+    background-color: var(--azul-principal);
+    color: var(--blanco);
+    font-size: 13px;
+}
+
+.dashboard-footer p {
+    margin: 0;
+}
+
+/* ==========================================
+   DISEÑO RESPONSIVE DEL DASHBOARD
+   ========================================== */
+
+@media (max-width: 768px) {
+
+    .dashboard-logo {
+        font-size: 20px;
+    }
+
+    .btn-logout {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+
+    .dashboard-container {
+        padding-top: 25px;
+    }
+
+    .account-card {
+        padding: 20px;
+    }
+
+    .account-card h2 {
+        font-size: 22px;
+    }
+
+    .section-title {
+        font-size: 21px;
+    }
+
+    .operation-card {
+        min-height: 180px;
+        padding: 20px;
+    }
+}
+/* ==========================================
+   POKÉMON BANK
+   PANTALLA DE DEPÓSITO
+   ========================================== */
+
+/* Contenedor de transacciones */
+.transaction-container {
+    padding-top: 40px;
+    padding-bottom: 60px;
+    min-height: calc(100vh - 160px);
+}
+
+/* Enlace para regresar */
+.back-link {
+    color: var(--azul-principal);
+    font-weight: bold;
+    text-decoration: none;
+    font-size: 16px;
+}
+
+.back-link:hover {
+    color: var(--azul-secundario);
+    text-decoration: underline;
+}
+
+/* Tarjeta principal */
+.transaction-card {
+    background-color: var(--blanco);
+    max-width: 650px;
+    margin: 0 auto;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.10);
+}
+
+/* Encabezado de operación */
+.transaction-heading {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.transaction-icon {
+    display: block;
+    font-size: 48px;
+    margin-bottom: 15px;
+}
+
+.transaction-heading h2 {
+    color: var(--azul-principal);
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.transaction-heading p {
+    color: #6B7280;
+    font-size: 15px;
+}
+
+/* Información de cuenta */
+.transaction-account {
+    background-color: #F3F4F6;
+    border-left: 5px solid var(--amarillo-pokemon);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.transaction-account h3 {
+    color: var(--azul-principal);
+    font-size: 19px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.transaction-account p {
+    margin-bottom: 10px;
+    font-size: 15px;
+}
+
+/* Campo del monto */
+.transaction-input {
+    height: 48px;
+    font-size: 18px;
+    text-align: right;
+}
+
+.transaction-input:focus {
+    border-color: var(--azul-secundario);
+    box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.15);
+}
+
+/* Etiquetas */
+.transaction-card label {
+    font-weight: bold;
+    color: var(--texto);
+    margin-bottom: 10px;
+}
+
+/* Botones */
+.transaction-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+/* Botón cancelar */
+.btn-cancel {
+    display: block;
+    width: 100%;
+    background-color: #E5E7EB;
+    color: var(--texto);
+    padding: 14px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+    text-decoration: none;
+}
+
+.btn-cancel:hover {
+    background-color: #D1D5DB;
+    color: var(--texto);
+    text-decoration: none;
+}
+
+/* Aviso académico */
+.transaction-notice {
+    background-color: #EFF6FF;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 30px;
+    text-align: center;
+}
+
+.transaction-notice p {
+    font-size: 12px;
+    color: #475569;
+    margin: 0;
+}
+
+/* ==========================================
+   RESPONSIVE - TRANSACCIONES
+   ========================================== */
+
+@media (max-width: 576px) {
+
+    .transaction-container {
+        padding-top: 25px;
+        padding-bottom: 40px;
+    }
+
+    .transaction-card {
+        padding: 25px 20px;
+    }
+
+    .transaction-heading h2 {
+        font-size: 24px;
+    }
+
+    .transaction-icon {
+        font-size: 40px;
+    }
+
+    .transaction-account {
+        padding: 15px;
+    }
+
+    .transaction-account h3 {
+        font-size: 17px;
+    }
+
+    .transaction-account p {
+        font-size: 14px;
+    }
+}
+/* ==========================================
+   POKÉMON BANK
+   PANTALLA DE CONSULTA DE SALDO
+   ========================================== */
+
+/* Tarjeta principal del saldo */
+.balance-card {
+    background: linear-gradient(
+        135deg,
+        #1E3A8A,
+        #2563EB
+    );
+
+    border-radius: 14px;
+    padding: 35px 25px;
+    margin-top: 30px;
+    margin-bottom: 25px;
+    text-align: center;
+    color: #FFFFFF;
+
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+/* Etiqueta del saldo */
+.balance-label {
+    font-size: 17px;
+    font-weight: 500;
+    margin-bottom: 15px;
+    color: #E5E7EB;
+}
+
+/* Cantidad disponible */
+.balance-amount {
+    font-size: 44px;
+    font-weight: bold;
+    color: #FFFFFF;
+    margin-bottom: 15px;
+}
+
+/* Moneda */
+.balance-currency {
+    font-size: 14px;
+    color: #DBEAFE;
+    margin-bottom: 0;
+}
+
+/* Información adicional */
+.balance-information {
+    background-color: #F3F4F6;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.balance-information p {
+    font-size: 14px;
+    color: #475569;
+    margin-bottom: 10px;
+}
+
+.balance-information p:last-child {
+    margin-bottom: 0;
+}
+
+/* Botón principal */
+.balance-button {
+    display: block;
+    width: 100%;
+    text-align: center;
+    text-decoration: none;
+}
+
+.balance-button:hover {
+    text-decoration: none;
+}
+
+/* ==========================================
+   RESPONSIVE - CONSULTA DE SALDO
+   ========================================== */
+
+@media (max-width: 576px) {
+
+    .balance-card {
+        padding: 25px 15px;
+    }
+
+    .balance-label {
+        font-size: 15px;
+    }
+
+    .balance-amount {
+        font-size: 34px;
+    }
+
+    .balance-currency {
+        font-size: 12px;
+    }
+
+    .balance-information {
+        padding: 15px;
+    }
+
+    .balance-information p {
+        font-size: 13px;
+    }
+
+}
+/* ==========================================
+   POKEMON BANK
+   PANTALLA DE PAGO DE SERVICIOS
+   ========================================== */
+
+/* Encabezado */
+
+.services-page .bank-header {
+    background-color: #24418f;
+    padding: 15px 0;
+}
+
+.services-page .bank-header .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+}
+
+.services-page .bank-header-title {
+    color: #ffffff;
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.services-page .logout-btn {
+    display: inline-block;
+    background-color: #ffda00;
+    color: #000000;
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+/* Contenedor principal */
+
+.services-page .operation-container {
+    padding-top: 35px;
+    padding-bottom: 40px;
+}
+
+.services-page .operation-card {
+    max-width: 590px;
+    margin: 25px auto;
+    padding: 35px;
+    background-color: #ffffff;
+    border-radius: 16px;
+}
+
+/* Encabezado de la operación */
+
+.services-page .operation-icon {
+    font-size: 38px;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.services-page .operation-title {
+    color: #173f9e;
+    font-size: 26px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 12px;
+}
+
+.services-page .operation-description {
+    color: #60789c;
+    font-size: 14px;
+    text-align: center;
+    line-height: 1.6;
+    margin-bottom: 30px;
+}
+
+/* Información de la cuenta */
+
+.services-page .account-info {
+    background-color: #f3f5f9;
+    border-left: 5px solid #ffda00;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 30px;
+    text-align: left;
+}
+
+.services-page .account-info h3 {
+    color: #173f9e;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 18px;
+}
+
+.services-page .account-info p {
+    color: #172b4d;
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
+/* Formulario */
+
+.services-page .form-group {
+    margin-bottom: 24px;
+}
+
+.services-page .form-group label {
+    display: block;
+    color: #172b4d;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: left;
+    margin-bottom: 10px;
+}
+
+.services-page .form-control {
+    width: 100%;
+    min-height: 45px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 15px;
+}
+
+.services-page .form-text {
+    font-size: 12px;
+    text-align: left;
+    margin-top: 8px;
+}
+
+/* Botones */
+
+.services-page .operation-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 30px;
+}
+
+.services-page .btn-confirm {
+    display: block;
+    width: 100%;
+    background-color: #ffda00;
+    color: #000000;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    text-align: center;
+    cursor: pointer;
+}
+
+.services-page .btn-confirm:hover {
+    background-color: #f2ca00;
+}
+
+.services-page .btn-cancel {
+    display: block;
+    width: 100%;
+    background-color: #d9dde3;
+    color: #172b4d;
+    padding: 14px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    text-align: center;
+    text-decoration: none;
+}
+
+.services-page .btn-cancel:hover {
+    background-color: #c9ced6;
+    color: #172b4d;
+    text-decoration: none;
+}
+
+/* Aviso informativo */
+
+.services-page .operation-notice {
+    background-color: #e8eef6;
+    color: #385b8c;
+    padding: 16px;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 12px;
+    line-height: 1.6;
+    margin-top: 30px;
+}
+
+/* ==========================================
+   DISEÑO RESPONSIVE
+   ========================================== */
+
+@media (max-width: 576px) {
+
+    .services-page .bank-header-title {
+        font-size: 19px;
+    }
+
+    .services-page .logout-btn {
+        font-size: 12px;
+        padding: 10px 12px;
+    }
+
+    .services-page .operation-container {
+        padding: 20px 15px;
+    }
+
+    .services-page .operation-card {
+        padding: 25px 18px;
+        margin-top: 20px;
+    }
+
+    .services-page .operation-title {
+        font-size: 23px;
+    }
+
+    .services-page .account-info {
+        padding: 16px;
+    }
+
+    .services-page .account-info h3 {
+        font-size: 16px;
+    }
+
+    .services-page .account-info p {
+        font-size: 13px;
+    }
+
+}
+/* ========================================
+   HISTORIAL DE TRANSACCIONES
+======================================== */
+
+.historial-container {
+    padding-bottom: 50px;
+}
+
+.historial-card {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 35px;
+    background-color: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+}
+
+.historial-icon {
+    font-size: 42px;
+    margin-bottom: 15px;
+}
+
+.historial-card h2 {
+    color: #173b9c;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.historial-subtitle {
+    color: #64748b;
+    font-size: 15px;
+}
+
+/* Información bancaria */
+
+.historial-card .account-info-box {
+    background-color: #f3f4f6;
+    border-left: 5px solid #ffda00;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 25px;
+}
+
+.historial-card .account-info-box h3 {
+    color: #173b9c;
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.historial-card .account-info-box p {
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+/* Resumen */
+
+.historial-summary {
+    background-color: #e8f0ff;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 25px;
+}
+
+.historial-summary h3 {
+    color: #173b9c;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.historial-summary p {
+    font-size: 14px;
+}
+
+/* Tabla */
+
+.historial-table {
+    font-size: 14px;
+    margin-bottom: 25px;
+}
+
+.historial-table thead {
+    background-color: #24418f;
+    color: white;
+}
+
+.historial-table th {
+    padding: 15px;
+    vertical-align: middle;
+}
+
+.historial-table td {
+    padding: 15px;
+    vertical-align: middle;
+}
+
+.historial-table .badge {
+    font-size: 12px;
+    padding: 8px 10px;
+}
+
+.amount-positive {
+    color: #198754;
+    font-weight: bold;
+}
+
+.amount-negative {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+/* Nota informativa */
+
+.historial-note {
+    background-color: #e8f0ff;
+    padding: 18px;
+    border-radius: 10px;
+    text-align: center;
+    font-size: 13px;
+    color: #24418f;
+    margin-bottom: 25px;
+}
+
+/* Botones */
+
+.historial-actions {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.historial-actions .btn {
+    padding: 13px;
+    font-weight: bold;
+    border-radius: 8px;
+}
+
+/* ========================================
+   DISEÑO RESPONSIVE
+======================================== */
+
+@media (max-width: 768px) {
+
+    .historial-container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+    .historial-card {
+        padding: 20px 15px;
+    }
+
+    .historial-card h2 {
+        font-size: 23px;
+    }
+
+    .historial-table {
+        font-size: 12px;
+    }
+
+    .historial-table th,
+    .historial-table td {
+        padding: 10px;
+    }
+
+    .historial-card .account-info-box {
+        padding: 15px;
+    }
+
+    .historial-summary {
+        padding: 15px;
+    }
+
+    .historial-actions {
+        width: 100%;
+    }
+
+}
+/* ==========================================
+   HISTORIAL - ENCABEZADO RESPONSIVO
+   ========================================== */
+
+.historial-page .bank-header {
+    width: 100%;
+}
+
+.historial-page .bank-header .container {
+    max-width: 1140px;
+    margin: 0 auto;
+}
+
+.historial-page .bank-logo {
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin: 0;
+    color: #ffffff;
+}
+
+.historial-page .btn-logout {
+    background-color: #ffda00;
+    color: #000000;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: 8px;
+    padding: 12px 18px;
+    white-space: nowrap;
+    text-align: center;
+}
+
+/* ==========================================
+   HISTORIAL - VERSION MOVIL
+   ========================================== */
+
+@media (max-width: 576px) {
+
+    .historial-page .bank-header {
+        padding: 14px 0;
+    }
+
+    .historial-page .bank-header .container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+    .historial-page .bank-logo {
+        font-size: 19px;
+        white-space: nowrap;
+    }
+
+    .historial-page .btn-logout {
+        font-size: 12px;
+        padding: 10px 12px;
+        white-space: nowrap;
+    }
+
+}
+/* =====================================================
+   POKEMON BANK
+   MODULO DE ESTADISTICAS
+   ===================================================== */
+
+/* Encabezado */
+
+.estadisticas-page .bank-header {
+    background-color: #244394;
+    padding: 15px 0;
+}
+
+.estadisticas-page .bank-logo {
+    color: #ffffff;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin: 0;
+}
+
+.estadisticas-page .btn-logout {
+    background-color: #ffda00;
+    color: #000000;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 18px;
+    font-weight: 600;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+/* Contenedor principal */
+
+.estadisticas-page .estadisticas-container {
+    padding-top: 20px;
+    padding-bottom: 40px;
+}
+
+/* Panel principal */
+
+.estadisticas-page .operation-panel {
+    background-color: #f1f1f1;
+    border-radius: 16px;
+    padding: 35px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+/* Encabezado de estadísticas */
+
+.estadisticas-page .operation-icon {
+    font-size: 42px;
+    margin-bottom: 15px;
+}
+
+.estadisticas-page .operation-title {
+    color: #173c9b;
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.estadisticas-page .operation-subtitle {
+    color: #62769d;
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+/* Información de la cuenta */
+
+.estadisticas-page .account-info {
+    background-color: #e5e5e5;
+    border-left: 5px solid #ffda00;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.estadisticas-page .account-info h3 {
+    color: #173c9b;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 15px;
+}
+
+.estadisticas-page .account-info p {
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+/* Resumen de movimientos */
+
+.estadisticas-page .statistics-summary h3 {
+    color: #173c9b;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+/* Tarjetas financieras */
+
+.estadisticas-page .stat-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 25px 15px;
+    text-align: center;
+    height: 100%;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+}
+
+.estadisticas-page .stat-card h4 {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 15px;
+}
+
+.estadisticas-page .stat-amount {
+    font-size: 27px;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.estadisticas-page .stat-card p:last-child {
+    font-size: 13px;
+    color: #62769d;
+}
+
+/* Depósitos */
+
+.estadisticas-page .stat-deposit {
+    border-top: 5px solid #28a745;
+}
+
+.estadisticas-page .stat-deposit .stat-amount {
+    color: #28a745;
+}
+
+/* Retiros */
+
+.estadisticas-page .stat-withdrawal {
+    border-top: 5px solid #dc3545;
+}
+
+.estadisticas-page .stat-withdrawal .stat-amount {
+    color: #dc3545;
+}
+
+/* Servicios */
+
+.estadisticas-page .stat-services {
+    border-top: 5px solid #ffda00;
+}
+
+.estadisticas-page .stat-services .stat-amount {
+    color: #173c9b;
+}
+
+/* Total de transacciones */
+
+.estadisticas-page .statistics-total {
+    background: linear-gradient(
+        135deg,
+        #244394,
+        #2d6aff
+    );
+
+    color: #ffffff;
+    text-align: center;
+    padding: 30px;
+    border-radius: 14px;
+}
+
+.estadisticas-page .statistics-total h3 {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.estadisticas-page .total-number {
+    font-size: 48px;
+    font-weight: 700;
+    margin: 10px 0;
+}
+
+/* Gráficos */
+
+.estadisticas-page .statistics-charts h3 {
+    color: #173c9b;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.estadisticas-page .chart-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 25px;
+    height: 100%;
+    text-align: center;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+}
+
+.estadisticas-page .chart-card h4 {
+    color: #173c9b;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+.estadisticas-page .chart-container {
+    min-height: 250px;
+    width: 100%;
+}
+
+/* Aviso académico */
+
+.estadisticas-page .simulation-notice {
+    background-color: #dce4f1;
+    border-radius: 10px;
+    padding: 18px;
+    text-align: center;
+    font-size: 13px;
+    color: #244394;
+    line-height: 1.6;
+}
+
+/* Botones */
+
+.estadisticas-page .operation-actions {
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.estadisticas-page .operation-actions .btn {
+    padding: 14px;
+    font-weight: 700;
+    border-radius: 8px;
+}
+
+.estadisticas-page .operation-actions .btn-warning {
+    background-color: #ffda00;
+    border: none;
+    color: #000000;
+}
+
+/* =====================================================
+   DISEÑO RESPONSIVO
+   ===================================================== */
+
+@media (max-width: 576px) {
+
+    .estadisticas-page .bank-header {
+        padding: 14px 0;
+    }
+
+    .estadisticas-page .bank-logo {
+        font-size: 19px;
+        white-space: nowrap;
+    }
+
+    .estadisticas-page .btn-logout {
+        font-size: 12px;
+        padding: 10px 12px;
+    }
+
+    .estadisticas-page .estadisticas-container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+    .estadisticas-page .operation-panel {
+        padding: 20px 15px;
+    }
+
+    .estadisticas-page .operation-title {
+        font-size: 24px;
+    }
+
+    .estadisticas-page .operation-subtitle {
+        font-size: 14px;
+    }
+
+    .estadisticas-page .stat-card {
+        padding: 20px;
+    }
+
+    .estadisticas-page .stat-amount {
+        font-size: 25px;
+    }
+
+    .estadisticas-page .statistics-total {
+        padding: 25px 15px;
+    }
+
+    .estadisticas-page .total-number {
+        font-size: 40px;
+    }
+
+    .estadisticas-page .chart-card {
+        padding: 15px;
+    }
+
+    .estadisticas-page .chart-container {
+        min-height: 220px;
+    }
+
+}
+/* ==========================================
+   ESTADÍSTICAS - LEYENDAS DE GRÁFICOS
+   ========================================== */
+
+.estadisticas-page .chart-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    min-height: 300px;
+    padding: 15px 5px;
+}
+
+.estadisticas-page .chart-container svg {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    overflow: visible;
+}
+
+.estadisticas-page .chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.estadisticas-page .chart-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #173f9b;
+}
+
+.estadisticas-page .chart-legend-color {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+/* Adaptación para dispositivos móviles */
+
+@media (max-width: 576px) {
+
+    .estadisticas-page .chart-container {
+        min-height: 260px;
+        padding: 10px 0;
+    }
+
+    .estadisticas-page .chart-legend {
+        gap: 8px;
+    }
+
+    .estadisticas-page .chart-legend-item {
+        font-size: 11px;
+    }
+
+}
