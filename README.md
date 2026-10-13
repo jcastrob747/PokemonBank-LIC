@@ -448,8 +448,4 @@ Los comprobantes PDF generados son documentos de demostración sin validez banca
 
 ## 13. Autor
 
-Proyecto académico desarrollado para la asignatura:
-
-**Lenguajes Interpretados en el Cliente**
-
-Año: **2026**.
+Jose Castro: Lenguajes Interpretados en el Cliente - Año: 2026
