@@ -1,270 +1,896 @@
-/* 
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/ClientSide/javascript.js to edit this template
- */
-
 /*
  * Pokémon Bank
  * Archivo: banco.js
  *
- * Administración central de las operaciones bancarias.
- * Simulador académico desarrollado con JavaScript.
+ * Fase 2 - Administración central del sistema bancario.
+ *
+ * Responsabilidades:
+ * - Inicialización de los datos del usuario.
+ * - Persistencia mediante LocalStorage y JSON.
+ * - Validación de operaciones bancarias.
+ * - Administración del saldo disponible.
+ * - Registro del historial de transacciones.
+ * - Procesamiento de depósitos, retiros y servicios.
+ *
+ * Simulador bancario académico.
+ * Lenguajes Interpretados en el Cliente.
  */
 
 const Banco = {
 
-    // Configuración inicial
-    saldoInicial: 2500.00,
+    // ============================================
+    // 1. CONFIGURACIÓN GENERAL
+    // ============================================
 
-    claveSaldo: "pokemonBankSaldo",
-    claveHistorial: "pokemonBankHistorial",
+    version: 2,
 
-    // Inicializar los datos bancarios
+    claveDatos: "pokemonBankDatosV2",
+
+    saldoInicialCentavos: 50000,
+
+    serviciosPermitidos: Object.freeze({
+        electricidad: "Energía eléctrica",
+        internet: "Internet",
+        telefonia: "Telefonía",
+        agua: "Agua potable"
+    }),
+
+
+    // ============================================
+    // 2. ESTRUCTURA INICIAL DE DATOS
+    // ============================================
+
+    crearDatosIniciales: function () {
+
+        return {
+
+            version: this.version,
+
+            usuario: {
+
+                nombre: "Ash Ketchum",
+
+                pin: "1234",
+
+                cuenta: "0987654321",
+
+                tipoCuenta: "Cuenta de ahorros",
+
+                moneda: "USD",
+
+                saldoCentavos: this.saldoInicialCentavos
+
+            },
+
+            historial: []
+
+        };
+
+    },
+
+
+    // ============================================
+    // 3. INICIALIZACIÓN DEL SISTEMA
+    // ============================================
+
     inicializar: function () {
 
-        if (localStorage.getItem(this.claveSaldo) === null) {
+        try {
 
-            localStorage.setItem(
-                this.claveSaldo,
-                this.saldoInicial.toFixed(2)
+            const datosGuardados =
+                localStorage.getItem(this.claveDatos);
+
+            // Crear los datos únicamente si no existen.
+
+            if (datosGuardados === null) {
+
+                const datosIniciales =
+                    this.crearDatosIniciales();
+
+                this.guardarDatos(datosIniciales);
+
+                console.log(
+                    "Pokémon Bank - Datos de Fase 2 inicializados."
+                );
+
+            } else {
+
+                // Verificar los datos existentes.
+
+                this.obtenerDatos();
+
+                console.log(
+                    "Pokémon Bank - Datos existentes recuperados."
+                );
+
+            }
+
+            return true;
+
+        } catch (error) {
+
+            console.error(
+                "Pokémon Bank - Error de inicialización:",
+                error
             );
 
-        }
-
-        if (localStorage.getItem(this.claveHistorial) === null) {
-
-            localStorage.setItem(
-                this.claveHistorial,
-                JSON.stringify([])
-            );
-
-        }
-
-    },
-
-    // Consultar saldo disponible
-    obtenerSaldo: function () {
-
-        this.inicializar();
-
-        return Number(
-            localStorage.getItem(this.claveSaldo)
-        );
-
-    },
-
-    // Guardar saldo actualizado
-    guardarSaldo: function (nuevoSaldo) {
-
-        if (!Number.isFinite(nuevoSaldo) || nuevoSaldo < 0) {
             return false;
+
+        }
+
+    },
+
+
+    // ============================================
+    // 4. VALIDACIÓN DE LA ESTRUCTURA JSON
+    // ============================================
+
+    validarDatos: function (datos) {
+
+        if (
+            !datos ||
+            typeof datos !== "object" ||
+            datos.version !== this.version ||
+            !datos.usuario ||
+            !Array.isArray(datos.historial)
+        ) {
+
+            return false;
+
+        }
+
+        const usuario = datos.usuario;
+
+        if (
+            typeof usuario.nombre !== "string" ||
+            usuario.nombre.trim() === "" ||
+
+            typeof usuario.pin !== "string" ||
+            !/^[0-9]{4}$/.test(usuario.pin) ||
+
+            typeof usuario.cuenta !== "string" ||
+            !/^[0-9]{10}$/.test(usuario.cuenta) ||
+
+            typeof usuario.tipoCuenta !== "string" ||
+            usuario.tipoCuenta.trim() === "" ||
+
+            usuario.moneda !== "USD" ||
+
+            !Number.isSafeInteger(usuario.saldoCentavos) ||
+            usuario.saldoCentavos < 0
+        ) {
+
+            return false;
+
+        }
+
+        // Verificar las transacciones almacenadas.
+
+        const identificadores = new Set();
+
+        let saldoEsperado = this.saldoInicialCentavos;
+
+        for (const transaccion of datos.historial) {
+
+            if (!this.validarTransaccion(transaccion)) {
+
+                return false;
+
+            }
+
+            if (
+                identificadores.has(transaccion.id) ||
+                transaccion.cuenta !== usuario.cuenta ||
+                transaccion.saldoAnteriorCentavos !== saldoEsperado
+            ) {
+
+                return false;
+
+            }
+
+            identificadores.add(transaccion.id);
+
+            saldoEsperado =
+                transaccion.saldoPosteriorCentavos;
+
+        }
+
+        // El saldo debe coincidir con el historial.
+
+        return usuario.saldoCentavos === saldoEsperado;
+
+    },
+
+
+    // ============================================
+    // 5. VALIDACIÓN DE TRANSACCIONES
+    // ============================================
+
+    validarTransaccion: function (transaccion) {
+
+        if (
+            !transaccion ||
+            typeof transaccion !== "object"
+        ) {
+
+            return false;
+
+        }
+
+        const tiposPermitidos = [
+            "Depósito",
+            "Retiro",
+            "Servicio"
+        ];
+
+        if (
+            typeof transaccion.id !== "string" ||
+            transaccion.id.trim() === "" ||
+
+            typeof transaccion.fecha !== "string" ||
+            !Number.isFinite(Date.parse(transaccion.fecha)) ||
+
+            !tiposPermitidos.includes(transaccion.tipo) ||
+
+            typeof transaccion.descripcion !== "string" ||
+            transaccion.descripcion.trim() === "" ||
+
+            typeof transaccion.cuenta !== "string" ||
+            !/^[0-9]{10}$/.test(transaccion.cuenta) ||
+
+            !Number.isSafeInteger(transaccion.montoCentavos) ||
+            transaccion.montoCentavos <= 0 ||
+
+            !Number.isSafeInteger(
+                transaccion.saldoAnteriorCentavos
+            ) ||
+
+            !Number.isSafeInteger(
+                transaccion.saldoPosteriorCentavos
+            ) ||
+
+            transaccion.saldoAnteriorCentavos < 0 ||
+            transaccion.saldoPosteriorCentavos < 0
+        ) {
+
+            return false;
+
+        }
+
+        // Verificar la relación matemática de los saldos.
+
+        const saldoCalculado =
+            transaccion.tipo === "Depósito"
+
+                ? transaccion.saldoAnteriorCentavos +
+                  transaccion.montoCentavos
+
+                : transaccion.saldoAnteriorCentavos -
+                  transaccion.montoCentavos;
+
+        if (
+            !Number.isSafeInteger(saldoCalculado) ||
+            saldoCalculado !==
+                transaccion.saldoPosteriorCentavos
+        ) {
+
+            return false;
+
+        }
+
+        // Validaciones adicionales para servicios.
+
+        if (transaccion.tipo === "Servicio") {
+
+            if (
+                !Object.prototype.hasOwnProperty.call(
+                    this.serviciosPermitidos,
+                    transaccion.servicio
+                ) ||
+
+                typeof transaccion.referencia !== "string" ||
+
+                !/^[A-Za-z0-9-]{1,20}$/.test(
+                    transaccion.referencia
+                )
+            ) {
+
+                return false;
+
+            }
+
+        }
+
+        return true;
+
+    },
+
+
+    // ============================================
+    // 6. RECUPERACIÓN DE DATOS
+    // ============================================
+
+    obtenerDatos: function () {
+
+        const datosGuardados =
+            localStorage.getItem(this.claveDatos);
+
+        if (datosGuardados === null) {
+
+            throw new Error(
+                "No existen datos bancarios inicializados."
+            );
+
+        }
+
+        const datos = JSON.parse(datosGuardados);
+
+        if (!this.validarDatos(datos)) {
+
+            throw new Error(
+                "La estructura de datos bancarios no es válida."
+            );
+
+        }
+
+        return datos;
+
+    },
+
+
+    // ============================================
+    // 7. ALMACENAMIENTO DE DATOS
+    // ============================================
+
+    guardarDatos: function (datos) {
+
+        if (!this.validarDatos(datos)) {
+
+            throw new Error(
+                "No es posible almacenar datos bancarios inválidos."
+            );
+
         }
 
         localStorage.setItem(
-            this.claveSaldo,
-            nuevoSaldo.toFixed(2)
+
+            this.claveDatos,
+
+            JSON.stringify(datos)
+
         );
 
         return true;
 
     },
 
-    // Consultar historial
+
+    // ============================================
+    // 8. CONSULTA DE INFORMACIÓN DEL USUARIO
+    // ============================================
+
+    obtenerUsuario: function () {
+
+        const usuario = this.obtenerDatos().usuario;
+
+        // Excluir el PIN de las consultas de presentación.
+
+        return {
+
+            nombre: usuario.nombre,
+
+            cuenta: usuario.cuenta,
+
+            tipoCuenta: usuario.tipoCuenta,
+
+            moneda: usuario.moneda,
+
+            saldoCentavos: usuario.saldoCentavos,
+
+            saldo: usuario.saldoCentavos / 100
+
+        };
+
+    },
+
+
+    // ============================================
+    // 9. VALIDACIÓN DEL PIN
+    // ============================================
+
+    validarPIN: function (pinIngresado) {
+
+        if (
+            typeof pinIngresado !== "string" ||
+            !/^[0-9]{4}$/.test(pinIngresado)
+        ) {
+
+            return false;
+
+        }
+
+        const datos = this.obtenerDatos();
+
+        return pinIngresado === datos.usuario.pin;
+
+    },
+
+
+    // ============================================
+    // 10. CONVERSIÓN MONETARIA
+    // ============================================
+
+    convertirACentavos: function (monto) {
+
+        if (
+            typeof monto !== "string" &&
+            typeof monto !== "number"
+        ) {
+
+            return null;
+
+        }
+
+        const valor = String(monto).trim();
+
+        // Permitir únicamente cantidades positivas
+        // con un máximo de dos posiciones decimales.
+
+        if (!/^[0-9]+(?:\.[0-9]{1,2})?$/.test(valor)) {
+
+            return null;
+
+        }
+
+        const partes = valor.split(".");
+
+        const dolares = Number(partes[0]);
+
+        const decimales = Number(
+            (partes[1] || "").padEnd(2, "0")
+        );
+
+        const centavos =
+            dolares * 100 + decimales;
+
+        if (
+            !Number.isSafeInteger(centavos) ||
+            centavos <= 0
+        ) {
+
+            return null;
+
+        }
+
+        return centavos;
+
+    },
+
+
+    convertirADolares: function (centavos) {
+
+        return centavos / 100;
+
+    },
+
+
+    // ============================================
+    // 11. CONSULTA DEL SALDO
+    // ============================================
+
+    obtenerSaldoCentavos: function () {
+
+        return this.obtenerDatos().usuario.saldoCentavos;
+
+    },
+
+
+    obtenerSaldo: function () {
+
+        return this.convertirADolares(
+            this.obtenerSaldoCentavos()
+        );
+
+    },
+
+
+    // ============================================
+    // 12. CONSULTA DEL HISTORIAL
+    // ============================================
+
     obtenerHistorial: function () {
 
-        this.inicializar();
+        const datos = this.obtenerDatos();
 
-        return JSON.parse(
-            localStorage.getItem(this.claveHistorial)
-        );
+        // Mantener temporalmente la propiedad monto
+        // para los módulos existentes de la Fase 1.
 
-    },
+        return datos.historial.map(function (transaccion) {
 
-    // Registrar una transacción
-    registrarTransaccion: function (tipo, descripcion, monto) {
+            return {
 
-        const historial = this.obtenerHistorial();
+                ...transaccion,
 
-        const transaccion = {
+                monto: transaccion.montoCentavos / 100,
 
-            id: Date.now(),
+                saldoAnterior:
+                    transaccion.saldoAnteriorCentavos / 100,
 
-            fecha: new Date().toLocaleString("es-SV"),
+                saldoPosterior:
+                    transaccion.saldoPosteriorCentavos / 100
 
-            tipo: tipo,
+            };
 
-            descripcion: descripcion,
-
-            monto: Number(monto.toFixed(2))
-
-        };
-
-        historial.push(transaccion);
-
-        localStorage.setItem(
-            this.claveHistorial,
-            JSON.stringify(historial)
-        );
-
-        return transaccion;
+        });
 
     },
 
-    // Realizar depósito
+
+    // ============================================
+    // 13. IDENTIFICADORES DE TRANSACCIONES
+    // ============================================
+
+    generarIdentificador: function (historial) {
+
+        let identificador;
+
+        do {
+
+            if (
+                typeof crypto !== "undefined" &&
+                typeof crypto.randomUUID === "function"
+            ) {
+
+                identificador =
+                    "PB-" + crypto.randomUUID();
+
+            } else {
+
+                identificador =
+                    "PB-" +
+                    Date.now().toString(36) +
+                    "-" +
+                    Math.random().toString(36).slice(2);
+
+            }
+
+        } while (
+
+            historial.some(function (transaccion) {
+
+                return transaccion.id === identificador;
+
+            })
+
+        );
+
+        return identificador;
+
+    },
+
+
+    // ============================================
+    // 14. PROCESAMIENTO CENTRAL DE TRANSACCIONES
+    // ============================================
+
+    procesarTransaccion: function (
+        tipo,
+        descripcion,
+        monto,
+        detalles = {}
+    ) {
+
+        try {
+
+            const tiposPermitidos = [
+                "Depósito",
+                "Retiro",
+                "Servicio"
+            ];
+
+            if (!tiposPermitidos.includes(tipo)) {
+
+                return {
+
+                    exito: false,
+
+                    mensaje: "Tipo de operación no válido."
+
+                };
+
+            }
+
+            const montoCentavos =
+                this.convertirACentavos(monto);
+
+            if (montoCentavos === null) {
+
+                return {
+
+                    exito: false,
+
+                    mensaje:
+                        "Ingresa un monto válido mayor a $0.00 " +
+                        "con un máximo de dos decimales."
+
+                };
+
+            }
+
+            const datos = this.obtenerDatos();
+
+            const saldoAnterior =
+                datos.usuario.saldoCentavos;
+
+            // Verificar fondos para las operaciones de egreso.
+
+            if (
+                tipo !== "Depósito" &&
+                montoCentavos > saldoAnterior
+            ) {
+
+                return {
+
+                    exito: false,
+
+                    mensaje:
+                        "Saldo insuficiente para realizar la operación."
+
+                };
+
+            }
+
+            // Calcular el saldo resultante.
+
+            const saldoPosterior =
+
+                tipo === "Depósito"
+
+                    ? saldoAnterior + montoCentavos
+
+                    : saldoAnterior - montoCentavos;
+
+            if (
+                !Number.isSafeInteger(saldoPosterior) ||
+                saldoPosterior < 0
+            ) {
+
+                return {
+
+                    exito: false,
+
+                    mensaje:
+                        "El saldo resultante no es válido."
+
+                };
+
+            }
+
+            // Construir la transacción bancaria.
+
+            const transaccion = {
+
+                id: this.generarIdentificador(
+                    datos.historial
+                ),
+
+                fecha: new Date().toISOString(),
+
+                tipo: tipo,
+
+                descripcion: descripcion,
+
+                cuenta: datos.usuario.cuenta,
+
+                montoCentavos: montoCentavos,
+
+                saldoAnteriorCentavos: saldoAnterior,
+
+                saldoPosteriorCentavos: saldoPosterior
+
+            };
+
+            // Incorporar datos específicos de servicios.
+
+            if (tipo === "Servicio") {
+
+                transaccion.servicio = detalles.servicio;
+
+                transaccion.referencia = detalles.referencia;
+
+            }
+
+            // Actualizar el saldo y registrar la operación.
+
+            datos.usuario.saldoCentavos = saldoPosterior;
+
+            datos.historial.push(transaccion);
+
+            // Guardar conjuntamente el saldo y el historial.
+
+            this.guardarDatos(datos);
+
+            return {
+
+                exito: true,
+
+                mensaje:
+                    tipo === "Depósito"
+
+                        ? "Depósito realizado correctamente."
+
+                        : tipo === "Retiro"
+
+                            ? "Retiro realizado correctamente."
+
+                            : "Pago de servicio realizado correctamente.",
+
+                saldo: saldoPosterior / 100,
+
+                saldoAnterior: saldoAnterior / 100,
+
+                transaccion: transaccion
+
+            };
+
+        } catch (error) {
+
+            console.error(
+                "Pokémon Bank - Error de transacción:",
+                error
+            );
+
+            return {
+
+                exito: false,
+
+                mensaje:
+                    "No fue posible completar la operación bancaria."
+
+            };
+
+        }
+
+    },
+
+
+    // ============================================
+    // 15. DEPÓSITOS
+    // ============================================
+
     depositar: function (monto) {
 
-        monto = Number(monto);
+        return this.procesarTransaccion(
 
-        if (!Number.isFinite(monto) || monto <= 0 ||
-            !Number.isInteger(monto * 100)) {
-
-            return {
-                exito: false,
-                mensaje: "Ingresa un monto válido mayor a $0.00."
-            };
-
-        }
-
-        const saldoActual = this.obtenerSaldo();
-
-        const nuevoSaldo = saldoActual + monto;
-
-        if (!this.guardarSaldo(nuevoSaldo)) {
-
-            return {
-                exito: false,
-                mensaje: "No fue posible actualizar el saldo."
-            };
-
-        }
-
-        this.registrarTransaccion(
             "Depósito",
-            "Depósito a cuenta",
-            monto
-        );
 
-        return {
-            exito: true,
-            mensaje: "Depósito realizado correctamente.",
-            saldo: nuevoSaldo
-        };
+            "Depósito a cuenta",
+
+            monto
+
+        );
 
     },
 
-    // Realizar retiro
+
+    // ============================================
+    // 16. RETIROS
+    // ============================================
+
     retirar: function (monto) {
 
-        monto = Number(monto);
+        return this.procesarTransaccion(
 
-        if (!Number.isFinite(monto) || monto <= 0 ||
-            !Number.isInteger(monto * 100)) {
-
-            return {
-                exito: false,
-                mensaje: "Ingresa un monto válido mayor a $0.00."
-            };
-
-        }
-
-        const saldoActual = this.obtenerSaldo();
-
-        if (monto > saldoActual) {
-
-            return {
-                exito: false,
-                mensaje: "Saldo insuficiente para realizar el retiro."
-            };
-
-        }
-
-        const nuevoSaldo = saldoActual - monto;
-
-        if (!this.guardarSaldo(nuevoSaldo)) {
-
-            return {
-                exito: false,
-                mensaje: "No fue posible actualizar el saldo."
-            };
-
-        }
-
-        this.registrarTransaccion(
             "Retiro",
-            "Retiro de efectivo",
-            monto
-        );
 
-        return {
-            exito: true,
-            mensaje: "Retiro realizado correctamente.",
-            saldo: nuevoSaldo
-        };
+            "Retiro de efectivo",
+
+            monto
+
+        );
 
     },
 
-    // Realizar pago de servicios
-    pagarServicio: function (servicio, referencia, monto) {
 
-        monto = Number(monto);
+    // ============================================
+    // 17. PAGO DE SERVICIOS
+    // ============================================
 
-        if (!servicio || !referencia ||
-            !String(referencia).trim()) {
+    pagarServicio: function (
+        servicio,
+        referencia,
+        monto
+    ) {
+
+        // Verificar el tipo de servicio.
+
+        if (
+            typeof servicio !== "string" ||
+
+            !Object.prototype.hasOwnProperty.call(
+                this.serviciosPermitidos,
+                servicio
+            )
+        ) {
 
             return {
+
                 exito: false,
-                mensaje: "Completa todos los datos del servicio."
+
+                mensaje: "Selecciona un servicio válido."
+
             };
 
         }
 
-        if (!Number.isFinite(monto) || monto <= 0 ||
-            !Number.isInteger(monto * 100)) {
+        // Verificar la referencia ingresada.
+
+        if (typeof referencia !== "string") {
 
             return {
+
                 exito: false,
-                mensaje: "Ingresa un monto válido mayor a $0.00."
+
+                mensaje: "Ingresa una referencia válida."
+
             };
 
         }
 
-        const saldoActual = this.obtenerSaldo();
+        referencia = referencia.trim();
 
-        if (monto > saldoActual) {
+        if (!/^[A-Za-z0-9-]{1,20}$/.test(referencia)) {
 
             return {
+
                 exito: false,
-                mensaje: "Saldo insuficiente para realizar el pago."
+
+                mensaje:
+                    "La referencia debe contener entre 1 y 20 " +
+                    "caracteres alfanuméricos o guiones."
+
             };
 
         }
 
-        const nuevoSaldo = saldoActual - monto;
+        const nombreServicio =
+            this.serviciosPermitidos[servicio];
 
-        if (!this.guardarSaldo(nuevoSaldo)) {
+        const descripcion =
 
-            return {
-                exito: false,
-                mensaje: "No fue posible actualizar el saldo."
-            };
+            "Pago de " +
 
-        }
+            nombreServicio +
 
-        this.registrarTransaccion(
+            " - Ref: " +
+
+            referencia;
+
+        return this.procesarTransaccion(
+
             "Servicio",
-            "Pago de " + servicio + " - Ref: " + referencia,
-            monto
-        );
 
-        return {
-            exito: true,
-            mensaje: "Pago realizado correctamente.",
-            saldo: nuevoSaldo
-        };
+            descripcion,
+
+            monto,
+
+            {
+
+                servicio: servicio,
+
+                referencia: referencia
+
+            }
+
+        );
 
     }
 
 };
 
-// Inicializar almacenamiento
+
+// ============================================
+// 18. INICIALIZACIÓN AUTOMÁTICA
+// ============================================
+
 Banco.inicializar();
