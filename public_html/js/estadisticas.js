@@ -1,585 +1,122 @@
-/* 
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/ClientSide/javascript.js to edit this template
+/* Pokémon Bank - Fase 2
+ * Estadísticas bancarias con Chart.js.
+ * Consulta de solo lectura; los cálculos se realizan en centavos enteros.
  */
-
-
-/*
- * Pokémon Bank
- * Archivo: estadisticas.js
- *
- * Módulo de estadísticas bancarias dinámicas.
- *
- * Desafío Práctico - Lenguajes Interpretados en el Cliente
- *
- * Tecnologías:
- * HTML5
- * CSS3
- * JavaScript puro
- * SVG
- *
- * Los datos se obtienen del historial bancario
- * administrado mediante banco.js.
- *
- * No se utilizan bibliotecas externas de gráficos.
- */
-
-
-// ============================================
-// 1. CONFIGURACIÓN DE MOVIMIENTOS
-// ============================================
-
-const movimientos = [
-
-    {
-        tipo: "Depósitos",
-        cantidad: 0,
-        monto: 0,
-        color: "#28a745"
-    },
-
-    {
-        tipo: "Retiros",
-        cantidad: 0,
-        monto: 0,
-        color: "#ff3547"
-    },
-
-    {
-        tipo: "Servicios",
-        cantidad: 0,
-        monto: 0,
-        color: "#ffcc00"
-    }
-
-];
-
-
-// ============================================
-// 2. VARIABLES GENERALES
-// ============================================
-
-let totalTransacciones = 0;
-
-let totalMontos = 0;
-
-
-// ============================================
-// 3. OBTENER DATOS BANCARIOS
-// ============================================
-
-function cargarEstadisticas() {
-
-    // Verificar disponibilidad del módulo bancario
-
-    if (typeof Banco === "undefined") {
-
-        console.error(
-            "Error: No se encontró el módulo banco.js."
-        );
-
-        return false;
-
-    }
-
-    // Obtener historial almacenado
-
-    const historial = Banco.obtenerHistorial();
-
-    if (!Array.isArray(historial)) {
-
-        console.error(
-            "Error: El historial bancario no es válido."
-        );
-
-        return false;
-
-    }
-
-    // Reiniciar estadísticas
-
-    movimientos.forEach(function (movimiento) {
-
-        movimiento.cantidad = 0;
-
-        movimiento.monto = 0;
-
-    });
-
-    // Procesar transacciones
-
-    historial.forEach(function (transaccion) {
-
-        const monto = Number(transaccion.monto);
-
-        if (!Number.isFinite(monto) || monto <= 0) {
-            return;
-        }
-
-        let categoria = null;
-
-        switch (transaccion.tipo) {
-
-            case "Depósito":
-
-                categoria = movimientos[0];
-
-                break;
-
-            case "Retiro":
-
-                categoria = movimientos[1];
-
-                break;
-
-            case "Servicio":
-
-                categoria = movimientos[2];
-
-                break;
-
-            default:
-
-                console.warn(
-                    "Tipo de transacción no reconocido:",
-                    transaccion.tipo
-                );
-
-                return;
-
-        }
-
-        categoria.cantidad++;
-
-        categoria.monto += monto;
-
-    });
-
-    // Calcular total de transacciones
-
-    totalTransacciones = movimientos.reduce(
-
-        function (total, movimiento) {
-
-            return total + movimiento.cantidad;
-
-        },
-
-        0
-
-    );
-
-    // Calcular suma de montos
-
-    totalMontos = movimientos.reduce(
-
-        function (total, movimiento) {
-
-            return total + movimiento.monto;
-
-        },
-
-        0
-
-    );
-
-    return true;
-
-}
-
-
-// ============================================
-// 4. FORMATO MONETARIO
-// ============================================
-
-function formatoMoneda(monto) {
-
-    return "$" + Number(monto).toLocaleString(
-        "en-US",
-        {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        }
-    );
-
-}
-
-
-// ============================================
-// 5. ACTUALIZAR RESUMEN HTML
-// ============================================
-
-function actualizarResumen() {
-
-    const elementos = [
-
-        {
-            idMonto: "totalDepositos",
-            idCantidad: "cantidadDepositos",
-            movimiento: movimientos[0]
-        },
-
-        {
-            idMonto: "totalRetiros",
-            idCantidad: "cantidadRetiros",
-            movimiento: movimientos[1]
-        },
-
-        {
-            idMonto: "totalServicios",
-            idCantidad: "cantidadServicios",
-            movimiento: movimientos[2]
-        }
-
+const Estadisticas = (() => {
+    const categorias = [
+        { tipo: 'Depósito', etiqueta: 'Depósitos', sufijo: 'Depositos', color: '#28a745' },
+        { tipo: 'Retiro', etiqueta: 'Retiros', sufijo: 'Retiros', color: '#ff3547' },
+        { tipo: 'Servicio', etiqueta: 'Servicios', sufijo: 'Servicios', color: '#ffcc00' }
     ];
+    let graficos = [];
+    const elemento = id => document.getElementById(id);
+    const moneda = centavos => (centavos / 100).toLocaleString('en-US', {
+        style: 'currency', currency: 'USD'
+    });
 
-    elementos.forEach(function (elemento) {
+    // Agrupar las operaciones sin modificar el historial original.
+    function resumir(historial) {
+        const resumen = categorias.map(c => ({ ...c, cantidad: 0, centavos: 0 }));
+        historial.forEach(t => {
+            const categoria = resumen.find(c => c.tipo === t.tipo);
+            if (!categoria || !Number.isSafeInteger(t.montoCentavos) || t.montoCentavos <= 0) {
+                throw new Error('Transacción no válida.');
+            }
+            categoria.cantidad++;
+            categoria.centavos += t.montoCentavos;
+            if (!Number.isSafeInteger(categoria.centavos)) throw new Error('Total fuera de rango.');
+        });
+        return resumen;
+    }
 
-        const campoMonto = document.getElementById(
-            elemento.idMonto
-        );
+    // Presentar datos de la cuenta, cantidades, montos y porcentajes.
+    function mostrarResumen(usuario, resumen, total) {
+        elemento('nombreUsuario').textContent = usuario.nombre;
+        elemento('numeroCuenta').textContent = usuario.cuenta;
+        elemento('tipoCuenta').textContent = usuario.tipoCuenta;
+        elemento('totalTransacciones').textContent = total;
+        const leyenda = elemento('leyendaDistribucion');
+        leyenda.replaceChildren();
+        resumen.forEach(c => {
+            elemento('total' + c.sufijo).textContent = moneda(c.centavos);
+            elemento('cantidad' + c.sufijo).textContent = c.cantidad +
+                (c.cantidad === 1 ? ' transacción' : ' transacciones');
+            const fila = document.createElement('div');
+            fila.className = 'chart-legend-item';
+            const color = document.createElement('span');
+            color.className = 'chart-legend-color';
+            color.style.backgroundColor = c.color;
+            const texto = document.createElement('span');
+            texto.textContent = c.etiqueta + ': ' + (total ? c.cantidad / total * 100 : 0).toFixed(2) + '%';
+            fila.append(color, texto);
+            leyenda.appendChild(fila);
+        });
+        elemento('sinMovimientos').classList.toggle('d-none', total !== 0);
+    }
 
-        const campoCantidad = document.getElementById(
-            elemento.idCantidad
-        );
+    // Crear gráficos interactivos y liberar instancias anteriores.
+    function destruirGraficos() {
+        graficos.forEach(g => g.destroy());
+        graficos = [];
+    }
+    function dibujar(resumen, total) {
+        destruirGraficos();
+        const etiquetas = resumen.map(c => c.etiqueta);
+        const colores = resumen.map(c => c.color);
+        graficos.push(new Chart(elemento('chartDistribucion'), {
+            type: 'doughnut',
+            data: { labels: etiquetas, datasets: [{
+                label: 'Cantidad de transacciones',
+                data: resumen.map(c => c.cantidad), backgroundColor: colores
+            }] },
+            options: { responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false }, tooltip: { callbacks: {
+                    label: ctx => `${ctx.label}: ${ctx.raw} (${(total ? ctx.raw / total * 100 : 0).toFixed(2)}%)`
+                } } }
+            }
+        }));
+        graficos.push(new Chart(elemento('chartMontos'), {
+            type: 'bar',
+            data: { labels: etiquetas, datasets: [{ label: 'Monto acumulado (USD)',
+                data: resumen.map(c => c.centavos / 100), backgroundColor: colores, borderRadius: 5
+            }] },
+            options: { responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false }, tooltip: { callbacks: {
+                    label: ctx => moneda(Math.round(ctx.raw * 100))
+                } } },
+                scales: { y: { beginAtZero: true, ticks: { callback: v => '$' + v } } }
+            }
+        }));
+    }
 
-        if (campoMonto) {
-
-            campoMonto.textContent = formatoMoneda(
-                elemento.movimiento.monto
-            );
-
+    // Validar sesión y estructura bancaria antes de mostrar información.
+    function inicializar() {
+        try {
+            if (typeof Sesion === 'undefined' || !Sesion.estaActiva()) return;
+            if (typeof Banco === 'undefined') throw new Error('Motor bancario no disponible.');
+            if (!Banco.validarDatos(Banco.obtenerDatos())) throw new Error('Datos bancarios inválidos.');
+            const historial = Banco.obtenerHistorial();
+            if (!Array.isArray(historial)) throw new Error('Historial inválido.');
+            const resumen = resumir(historial);
+            mostrarResumen(Banco.obtenerUsuario(), resumen, historial.length);
+            if (typeof Chart === 'undefined') throw new Error('Chart.js no disponible.');
+            elemento('contenidoEstadisticas').classList.remove('d-none');
+            dibujar(resumen, historial.length);
+            elemento('errorEstadisticas').classList.add('d-none');
+            console.log('Pokémon Bank - Estadísticas de Fase 2 inicializadas.');
+            console.table(resumen);
+        } catch (error) {
+            destruirGraficos();
+            elemento('contenidoEstadisticas').classList.add('d-none');
+            const aviso = elemento('errorEstadisticas');
+            aviso.textContent = 'No fue posible cargar las estadísticas. Actualiza la página e intenta nuevamente.';
+            aviso.classList.remove('d-none');
+            console.error('Pokémon Bank - Error de estadísticas:', error);
+            if (typeof Swal !== 'undefined') Swal.fire({ icon: 'error', title: 'Estadísticas no disponibles', text: aviso.textContent, confirmButtonText: 'Aceptar' });
         }
-
-        if (campoCantidad) {
-
-            const cantidad = elemento.movimiento.cantidad;
-
-            campoCantidad.textContent = cantidad +
-                (cantidad === 1
-                    ? " transacción"
-                    : " transacciones");
-
-        }
-
-    });
-
-    // Actualizar total general
-
-    const campoTotal = document.getElementById(
-        "totalTransacciones"
-    );
-
-    if (campoTotal) {
-
-        campoTotal.textContent = totalTransacciones;
-
     }
-
-}
-
-
-// ============================================
-// 6. GRÁFICO DE DISTRIBUCIÓN
-// ============================================
-
-function generarGraficoDistribucion() {
-
-    const contenedor = document.getElementById(
-        "graficoDistribucion"
-    );
-
-    if (!contenedor) {
-        return;
-    }
-
-    const radio = 80;
-
-    const circunferencia = 2 * Math.PI * radio;
-
-    let desplazamiento = 0;
-
-    let svg = `
-
-        <svg
-            viewBox="0 0 300 260"
-            xmlns="http://www.w3.org/2000/svg"
-            role="img"
-            aria-label="Distribución de operaciones bancarias"
-            style="width:100%; max-width:300px; height:auto;"
-        >
-
-            <circle
-                cx="150"
-                cy="115"
-                r="${radio}"
-                fill="none"
-                stroke="#e9ecef"
-                stroke-width="35"
-            />
-
-    `;
-
-    // Dibujar segmentos
-
-    movimientos.forEach(function (movimiento) {
-
-        const porcentaje = totalTransacciones > 0
-            ? movimiento.cantidad / totalTransacciones
-            : 0;
-
-        const longitud = porcentaje * circunferencia;
-
-        svg += `
-
-            <circle
-                cx="150"
-                cy="115"
-                r="${radio}"
-                fill="none"
-                stroke="${movimiento.color}"
-                stroke-width="35"
-                stroke-dasharray="${longitud} ${circunferencia}"
-                stroke-dashoffset="${-desplazamiento}"
-                transform="rotate(-90 150 115)"
-            />
-
-        `;
-
-        desplazamiento += longitud;
-
-    });
-
-    // Texto central
-
-    svg += `
-
-            <text
-                x="150"
-                y="110"
-                text-anchor="middle"
-                font-size="30"
-                font-weight="bold"
-                fill="#173f9b"
-            >
-                ${totalTransacciones}
-            </text>
-
-            <text
-                x="150"
-                y="135"
-                text-anchor="middle"
-                font-size="13"
-                fill="#555555"
-            >
-                Transacciones
-            </text>
-
-        </svg>
-
-    `;
-
-    contenedor.innerHTML = svg;
-
-    // Crear leyenda
-
-    const leyenda = document.createElement("div");
-
-    leyenda.className = "chart-legend";
-
-    movimientos.forEach(function (movimiento) {
-
-        const porcentaje = totalTransacciones > 0
-            ? (movimiento.cantidad / totalTransacciones) * 100
-            : 0;
-
-        const elemento = document.createElement("div");
-
-        elemento.className = "chart-legend-item";
-
-        elemento.innerHTML = `
-
-            <span
-                class="chart-legend-color"
-                style="background-color:${movimiento.color}">
-            </span>
-
-            <span>
-                ${movimiento.tipo}:
-                ${porcentaje.toFixed(2)}%
-            </span>
-
-        `;
-
-        leyenda.appendChild(elemento);
-
-    });
-
-    contenedor.appendChild(leyenda);
-
-}
-
-
-// ============================================
-// 7. GRÁFICO COMPARATIVO DE MONTOS
-// ============================================
-
-function generarGraficoMontos() {
-
-    const contenedor = document.getElementById(
-        "graficoMontos"
-    );
-
-    if (!contenedor) {
-        return;
-    }
-
-    const ancho = 400;
-
-    const alto = 280;
-
-    const margenIzquierdo = 55;
-
-    const margenSuperior = 25;
-
-    const alturaGrafico = 180;
-
-    const anchoBarra = 65;
-
-    const montoMaximo = Math.max(
-        ...movimientos.map(
-            movimiento => movimiento.monto
-        )
-    );
-
-    let svg = `
-
-        <svg
-            viewBox="0 0 ${ancho} ${alto}"
-            xmlns="http://www.w3.org/2000/svg"
-            role="img"
-            aria-label="Comparación de montos bancarios"
-            style="width:100%; max-width:400px; height:auto;"
-        >
-
-    `;
-
-    // Línea horizontal inferior
-
-    svg += `
-
-        <line
-            x1="${margenIzquierdo}"
-            y1="${margenSuperior + alturaGrafico}"
-            x2="390"
-            y2="${margenSuperior + alturaGrafico}"
-            stroke="#999999"
-            stroke-width="1"
-        />
-
-    `;
-
-    // Generar barras
-
-    movimientos.forEach(function (movimiento, indice) {
-
-        const alturaBarra = montoMaximo > 0
-            ? (movimiento.monto / montoMaximo) * alturaGrafico
-            : 0;
-
-        const x = margenIzquierdo + 35 + indice * 105;
-
-        const y = margenSuperior +
-            alturaGrafico - alturaBarra;
-
-        svg += `
-
-            <rect
-                x="${x}"
-                y="${y}"
-                width="${anchoBarra}"
-                height="${alturaBarra}"
-                fill="${movimiento.color}"
-                rx="5"
-            />
-
-            <text
-                x="${x + anchoBarra / 2}"
-                y="${Math.max(y - 8, 14)}"
-                text-anchor="middle"
-                font-size="13"
-                font-weight="bold"
-                fill="#173f9b"
-            >
-                ${formatoMoneda(movimiento.monto)}
-            </text>
-
-            <text
-                x="${x + anchoBarra / 2}"
-                y="${margenSuperior + alturaGrafico + 22}"
-                text-anchor="middle"
-                font-size="12"
-                fill="#173f9b"
-            >
-                ${movimiento.tipo}
-            </text>
-
-        `;
-
-    });
-
-    svg += `
-
-        </svg>
-
-    `;
-
-    contenedor.innerHTML = svg;
-
-}
-
-
-// ============================================
-// 8. INICIALIZACIÓN
-// ============================================
-
-document.addEventListener("DOMContentLoaded", function () {
-
-    const datosCargados = cargarEstadisticas();
-
-    if (!datosCargados) {
-        return;
-    }
-
-    // Actualizar tarjetas
-
-    actualizarResumen();
-
-    // Generar gráficos
-
-    generarGraficoDistribucion();
-
-    generarGraficoMontos();
-
-    // Información de diagnóstico
-
-    console.log(
-        "Pokémon Bank - Estadísticas dinámicas cargadas correctamente."
-    );
-
-    console.log(
-        "Total de transacciones:",
-        totalTransacciones
-    );
-
-    console.log(
-        "Total de montos:",
-        totalMontos.toFixed(2)
-    );
-
-    console.log(
-        "Resumen por categoría:",
-        movimientos
-    );
-
-});
+    return { inicializar, resumir };
+})();
+document.addEventListener('DOMContentLoaded', Estadisticas.inicializar);
+window.addEventListener('pageshow', e => { if (e.persisted) Estadisticas.inicializar(); });
+window.addEventListener('storage', e => { if (typeof Banco !== 'undefined' && e.key === Banco.claveDatos) Estadisticas.inicializar(); });
