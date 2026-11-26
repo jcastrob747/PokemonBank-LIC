@@ -1,451 +1,207 @@
-# Pokémon Bank
+# Pokémon Bank – Simulador Bancario
 
-## Simulador Bancario Académico
+## Descripción del proyecto
 
-Pokémon Bank es una aplicación web académica que simula las operaciones principales de un cajero automático (ATM).
+Pokémon Bank es una aplicación web que simula las operaciones principales de un cajero automático bancario. El proyecto fue desarrollado con fines académicos para la asignatura Lenguajes Interpretados en el Cliente, correspondiente a la carrera de Ingeniería en Ciencias de la Computación de la Universidad Don Bosco.
 
-El proyecto fue desarrollado como parte de la asignatura **Lenguajes Interpretados en el Cliente**, utilizando HTML5, CSS3, Bootstrap 4.6 y JavaScript.
+La aplicación permite administrar una cuenta bancaria simulada mediante tecnologías ejecutadas del lado del cliente, sin necesidad de un servidor de aplicaciones o una base de datos externa.
 
-Su objetivo es proporcionar una interfaz web intuitiva, funcional y adaptable para realizar operaciones bancarias simuladas utilizando los datos de una cuenta de prueba.
+## Demostración en línea
 
-La aplicación incorpora ventanas interactivas mediante **SweetAlert2**, generación de comprobantes PDF mediante **jsPDF** y publicación automática mediante **GitHub Actions y GitHub Pages**.
+https://jcastrob747.github.io/PokemonBank-LIC/
 
-### Aplicación publicada
+## Datos de acceso
 
-**[Acceder al simulador Pokémon Bank](https://jcastrob747.github.io/PokemonBank-LIC/)**
-
----
-
-## 1. Objetivo del proyecto
-
-Desarrollar una aplicación web que permita simular las principales operaciones de un cajero automático mediante tecnologías de desarrollo web del lado del cliente.
-
-El simulador permite:
-
-- Iniciar sesión mediante un PIN de cuatro dígitos.
-- Consultar información bancaria.
-- Realizar depósitos y retiros simulados.
-- Consultar el saldo disponible.
-- Pagar servicios básicos.
-- Consultar el historial de transacciones.
-- Visualizar estadísticas bancarias.
-- Descargar comprobantes PDF de las operaciones realizadas.
-
----
-
-## 2. Tecnologías utilizadas
-
-| Tecnología | Función |
+| Campo | Valor |
 |---|---|
-| HTML5 | Estructura de las páginas web. |
-| CSS3 | Diseño visual y estilos personalizados. |
-| Bootstrap 4.6 | Diseño adaptable a diferentes pantallas. |
-| JavaScript | Lógica de las operaciones bancarias. |
-| SweetAlert2 | Ventanas interactivas de confirmación y notificación. |
-| jsPDF | Generación de comprobantes bancarios en PDF. |
-| SVG | Representación de gráficos estadísticos. |
-| LocalStorage | Almacenamiento de saldos y transacciones. |
-| SessionStorage | Administración de sesiones. |
-| Git | Control de versiones. |
-| GitHub | Alojamiento del repositorio. |
-| GitHub Actions | Automatización del despliegue. |
-| GitHub Pages | Publicación de la aplicación web. |
-| Apache NetBeans | Entorno de desarrollo. |
+| Titular | Ash Ketchum |
+| PIN | 1234 |
+| Número de cuenta | 0987654321 |
+| Tipo de cuenta | Cuenta de ahorros |
+| Saldo inicial | $500.00 USD |
 
-La lógica principal del simulador está desarrollada con JavaScript del lado del cliente, sin utilizar frameworks de JavaScript.
+## Funcionalidades
 
----
-
-## 3. Funcionalidades
-
-### 3.1. Inicio de sesión
-
-- Acceso mediante PIN de cuatro dígitos.
-- Validación del PIN ingresado.
-- Administración de sesiones.
-- Protección de las páginas internas.
-- Cierre de sesión.
-
-### 3.2. Menú principal
-
-- Información del titular.
-- Número de cuenta.
-- Tipo de cuenta.
-- Acceso a las operaciones bancarias.
-
-### 3.3. Depósitos
-
-- Registro de depósitos.
-- Validación de montos.
-- Actualización del saldo.
-- Registro automático en el historial.
-- Confirmaciones mediante SweetAlert2.
+- Inicio y cierre de sesión.
+- Control de acceso a páginas internas.
+- Consulta de información bancaria.
+- Consulta de saldo disponible.
+- Depósitos bancarios.
+- Retiros de efectivo.
+- Pago de servicios.
+- Validación de formularios.
+- Confirmaciones y notificaciones interactivas.
+- Historial persistente de transacciones.
 - Generación de comprobantes PDF.
+- Descarga de comprobantes desde el historial.
+- Estadísticas bancarias dinámicas.
+- Gráficos de distribución y comparación de operaciones.
+- Diseño adaptable a dispositivos móviles.
 
-### 3.4. Retiros
+## Tecnologías utilizadas
 
-- Registro de retiros.
-- Validación de fondos disponibles.
-- Actualización del saldo.
-- Registro automático de transacciones.
-- Confirmaciones mediante SweetAlert2.
-- Generación de comprobantes PDF.
+| Tecnología | Aplicación |
+|---|---|
+| HTML5 | Estructura de las interfaces |
+| CSS3 | Diseño y presentación visual |
+| JavaScript | Lógica bancaria y procesamiento de información |
+| Bootstrap 4.6 | Diseño adaptable |
+| LocalStorage | Persistencia de información bancaria |
+| SessionStorage | Administración de sesión |
+| ValidateJS | Validación de formularios |
+| SweetAlert2 | Cuadros de diálogo interactivos |
+| jsPDF | Generación de comprobantes PDF |
+| Chart.js 4.4.8 | Representación gráfica de transacciones |
+| NetBeans | Entorno de desarrollo |
+| Git | Control de versiones |
+| GitHub | Administración del repositorio |
+| GitHub Pages | Publicación de la aplicación |
 
-### 3.5. Consulta de saldo
+## Arquitectura del sistema
 
-- Visualización del saldo disponible.
-- Actualización automática después de las operaciones.
+La aplicación utiliza una arquitectura modular del lado del cliente. La lógica bancaria se encuentra centralizada en JavaScript, mientras que los diferentes módulos gestionan las interfaces, validaciones, sesiones, comprobantes y estadísticas.
 
-### 3.6. Pago de servicios
+La información bancaria se almacena mediante una estructura JSON persistente en LocalStorage.
 
-Servicios disponibles:
+Para mejorar la precisión de las operaciones monetarias, los cálculos financieros se realizan mediante centavos enteros.
 
-- Energía eléctrica.
-- Internet.
-- Telefonía.
-- Agua potable.
-
-El módulo permite registrar referencias de pago, validar montos y actualizar el saldo disponible.
-
-También incorpora:
-
-- Confirmación del pago mediante SweetAlert2.
-- Mensajes de operación exitosa.
-- Validación de fondos suficientes.
-- Protección del contenido dinámico mostrado en ventanas HTML.
-- Generación de comprobantes PDF.
-- Registro de las operaciones en el historial.
-
-### 3.7. Historial de transacciones
-
-- Consulta de depósitos.
-- Consulta de retiros.
-- Consulta de pagos de servicios.
-- Visualización de fechas y montos.
-- Clasificación de operaciones por tipo.
-- Conservación de movimientos mediante LocalStorage.
-
-### 3.8. Estadísticas bancarias
-
-- Total de transacciones.
-- Total de depósitos.
-- Total de retiros.
-- Total de pagos de servicios.
-- Gráfico de distribución de operaciones.
-- Gráfico comparativo de montos.
-
-Los gráficos se generan dinámicamente mediante JavaScript y SVG.
-
----
-
-## 4. Bibliotecas externas
-
-### 4.1. SweetAlert2
-
-SweetAlert2 permite sustituir las ventanas tradicionales de JavaScript por cuadros de diálogo interactivos y personalizables.
-
-En Pokémon Bank se utiliza para:
-
-- Solicitar confirmación antes de realizar operaciones.
-- Mostrar mensajes de transacciones exitosas.
-- Presentar información de los movimientos bancarios.
-- Ofrecer opciones para descargar comprobantes PDF.
-
-La biblioteca se incorpora mediante CDN:
-
-```html
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-```
-
-### 4.2. jsPDF
-
-jsPDF permite crear documentos PDF directamente desde el navegador mediante JavaScript.
-
-En Pokémon Bank se utiliza para generar comprobantes bancarios correspondientes a:
-
-- Depósitos.
-- Retiros.
-- Pagos de servicios.
-
-La biblioteca se incorpora mediante CDN:
-
-```html
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
-```
-
-El archivo `comprobantes.js` centraliza la generación de los documentos.
-
-### 4.3. Información de los comprobantes
-
-Los comprobantes PDF incluyen:
-
-- Nombre del simulador.
-- Número de comprobante.
-- Fecha y hora.
-- Titular de la cuenta.
-- Número de cuenta.
-- Tipo de cuenta.
-- Tipo de operación.
-- Descripción de la transacción.
-- Monto de la operación.
-- Saldo resultante.
-- Aviso indicando que se trata de una simulación académica.
-
-En los pagos de servicios, la descripción permite identificar el servicio pagado y su referencia.
-
-Los documentos se descargan automáticamente cuando el usuario selecciona la opción correspondiente.
-
----
-
-## 5. Estructura del proyecto
+## Estructura del proyecto
 
 ```text
 PokemonBank-LIC/
-│
 ├── .github/
 │   └── workflows/
 │       └── deploy.yml
-│
 ├── public_html/
-│   │
 │   ├── css/
 │   │   └── styles.css
-│   │
 │   ├── images/
 │   │   └── favicon.svg
-│   │
 │   ├── js/
 │   │   ├── banco.js
 │   │   ├── comprobantes.js
+│   │   ├── dashboard.js
 │   │   ├── deposito.js
+│   │   ├── estadisticas.js
+│   │   ├── historial.js
+│   │   ├── login.js
 │   │   ├── retiro.js
 │   │   ├── saldo.js
 │   │   ├── servicios.js
-│   │   ├── historial.js
-│   │   ├── estadisticas.js
-│   │   ├── login.js
-│   │   └── sesion.js
-│   │
-│   ├── index.html
+│   │   ├── sesion.js
+│   │   └── transacciones.js
 │   ├── dashboard.html
 │   ├── deposito.html
+│   ├── estadisticas.html
+│   ├── historial.html
+│   ├── index.html
 │   ├── retiro.html
 │   ├── saldo.html
-│   ├── servicios.html
-│   ├── historial.html
-│   └── estadisticas.html
-│
-├── nbproject/
-├── README.md
-├── .gitignore
-├── .bowerrc
-├── bower.json
-├── Gruntfile.js
-├── gulpfile.js
-└── package.json
+│   └── servicios.html
+└── README.md
 ```
 
----
+## Almacenamiento de información
 
-## 6. Funcionamiento del sistema
+La segunda fase utiliza las siguientes claves principales:
 
-El simulador utiliza un saldo inicial de prueba de **$2,500.00**.
+| Almacenamiento | Clave | Propósito |
+|---|---|---|
+| LocalStorage | pokemonBankDatosV2 | Información bancaria e historial |
+| SessionStorage | pokemonBankSesion | Control de sesión activa |
 
-Las operaciones bancarias modifican el saldo disponible y registran automáticamente los movimientos realizados.
+La información almacenada incluye los datos del titular, número de cuenta, saldo disponible y registro de transacciones.
 
-Los datos se almacenan mediante **LocalStorage**, permitiendo conservar las transacciones al actualizar o cerrar el navegador.
+Cada transacción contiene información que permite identificar la operación, su fecha, tipo, descripción, monto y saldos asociados.
 
-La sesión del usuario se administra mediante **SessionStorage**.
+## Comprobantes bancarios
 
-El sistema funciona completamente del lado del cliente y no requiere una base de datos.
+La aplicación utiliza jsPDF para generar comprobantes descargables correspondientes a depósitos, retiros y pagos de servicios.
 
-### Procesamiento de operaciones
+Los comprobantes incluyen:
 
-El funcionamiento general es:
+- Identificador único de la transacción.
+- Fecha y hora.
+- Información del titular.
+- Número y tipo de cuenta.
+- Descripción de la operación.
+- Saldo anterior.
+- Monto de la transacción.
+- Saldo resultante.
+- Aviso de simulación académica.
 
-1. El usuario inicia sesión.
-2. Selecciona una operación bancaria.
-3. Introduce los datos solicitados.
-4. El sistema valida la información.
-5. SweetAlert2 solicita la confirmación.
-6. JavaScript procesa la operación.
-7. Se actualiza el saldo y se registra la transacción.
-8. SweetAlert2 presenta el resultado.
-9. El usuario puede descargar un comprobante PDF mediante jsPDF.
+Los comprobantes también pueden descargarse nuevamente desde el historial de transacciones.
 
----
+## Estadísticas bancarias
 
-## 7. Instrucciones de ejecución
+Mediante Chart.js se generan dos gráficos dinámicos:
 
-### 7.1. Ejecución desde NetBeans
+1. Gráfico de anillo para representar la cantidad y distribución porcentual de las operaciones.
+2. Gráfico de barras para comparar los montos acumulados por tipo de transacción.
 
-1. Descargar o clonar el repositorio.
-2. Abrir el proyecto en Apache NetBeans.
-3. Ejecutar el archivo `index.html`.
-4. Ingresar el PIN de prueba configurado.
-5. Acceder al menú principal.
-6. Seleccionar la operación bancaria deseada.
+Los gráficos utilizan la información almacenada en el historial bancario.
 
-También es posible ejecutar la aplicación mediante un servidor web local.
+## Pruebas y validaciones
 
-### 7.2. Ejecución desde Internet
+Durante el desarrollo se realizaron pruebas funcionales, técnicas y visuales para comprobar el comportamiento de los diferentes módulos.
 
-La aplicación está publicada mediante GitHub Pages.
+| Prueba | Descripción | Resultado |
+|---|---|---|
+| SA12 | Diagnóstico final del módulo de saldo | 32/32 aprobadas |
+| TR01 | Estado inicial de operaciones | 8/8 aprobadas |
+| TR02 | Depósito bancario | 10/10 aprobadas |
+| TR02-PDF | Generación del comprobante corregido | 17/17 aprobadas |
+| TR03 | Retiro bancario | 19/19 aprobadas |
+| TR04 | Pago de servicios | 21/21 aprobadas |
+| TR05 | Validación consolidada de operaciones inválidas | 10/10 casos aprobados |
+| ES01 | Validación consolidada de estadísticas | 31/31 aprobadas |
+| PF01 | Prueba integral final | 24/24 aprobadas |
 
-**Dirección:**
+También se verificó la descarga de comprobantes desde el historial y la presentación de las interfaces mediante emulación de dispositivos móviles.
 
-https://jcastrob747.github.io/PokemonBank-LIC/
+La prueba integral final PF01 obtuvo un cumplimiento del 100 %.
 
-Para utilizarla:
+## Control de versiones
 
-1. Abrir la dirección en un navegador.
-2. Ingresar el PIN de prueba configurado.
-3. Acceder al menú principal.
-4. Seleccionar la operación bancaria.
-5. Realizar las transacciones simuladas.
+El proyecto fue desarrollado en dos fases.
 
-La aplicación no necesita instalarse en la computadora del usuario.
+### Fase 1
 
-**Nota:** Las bibliotecas cargadas mediante CDN requieren conexión a Internet.
+Implementación inicial del simulador bancario, sus interfaces y operaciones principales.
 
----
+La versión original se encuentra preservada mediante la etiqueta:
 
-## 8. Diseño adaptable
+`v1.0-fase1`
 
-La aplicación utiliza Bootstrap 4.6 y CSS3.
+### Fase 2
 
-Las interfaces fueron diseñadas para adaptarse a diferentes resoluciones de pantalla.
+Ampliación y actualización del sistema mediante almacenamiento JSON, validaciones avanzadas, comprobantes dinámicos, historial persistente y gráficos estadísticos con Chart.js.
 
-Se realizaron pruebas de visualización en computadoras y dispositivos móviles mediante las herramientas de desarrollo de Google Chrome.
+El desarrollo de esta fase se realizó en la rama:
 
-También se verificó la visualización de ventanas SweetAlert2 y gráficos estadísticos en resoluciones móviles.
+`fase2`
 
----
+## Ejecución local
 
-## 9. Control de versiones
+1. Clonar el repositorio.
+2. Abrir el proyecto mediante NetBeans o un editor compatible con desarrollo web.
+3. Ejecutar la aplicación mediante un servidor web local.
+4. Abrir el archivo `public_html/index.html` a través del servidor.
+5. Iniciar sesión utilizando el PIN de prueba.
 
-El proyecto utiliza Git para administrar las versiones del código fuente.
+Se requiere conexión a Internet para cargar las bibliotecas externas utilizadas por la aplicación.
 
-El repositorio remoto se encuentra alojado en GitHub.
+## Consideraciones de seguridad
 
-**Rama principal:** `main`.
+Pokémon Bank es un simulador académico ejecutado del lado del cliente. Los mecanismos de autenticación y almacenamiento implementados tienen fines educativos y no representan mecanismos de seguridad adecuados para una aplicación bancaria real.
 
-Las modificaciones se registran mediante commits para mantener un historial organizado del desarrollo.
+No se realizan operaciones financieras reales ni se utiliza información bancaria confidencial.
 
-Durante la implementación de SweetAlert2 y jsPDF se modificaron los módulos de depósitos, retiros y pagos de servicios.
+## Información académica
 
-También se incorporó el archivo `comprobantes.js`.
-
-Posteriormente, los cambios se sincronizaron mediante operaciones Git de Commit, Merge y Push desde Apache NetBeans.
-
----
-
-## 10. GitHub Actions y GitHub Pages
-
-Pokémon Bank utiliza GitHub Actions para automatizar su publicación.
-
-El flujo de trabajo se encuentra en:
-
-```text
-.github/workflows/deploy.yml
-```
-
-### Funcionamiento del despliegue
-
-Cuando se envían cambios a la rama `main`:
-
-1. GitHub Actions detecta el nuevo commit.
-2. Descarga el contenido del repositorio.
-3. Configura GitHub Pages.
-4. Prepara los archivos ubicados en `public_html`.
-5. Publica la aplicación automáticamente.
-
-Este procedimiento permite mantener la estructura original del proyecto de NetBeans.
-
-### Sitio publicado
-
-https://jcastrob747.github.io/PokemonBank-LIC/
-
-La publicación utiliza HTTPS.
-
----
-
-## 11. Pruebas funcionales
-
-Se realizaron pruebas para comprobar el funcionamiento de las principales operaciones.
-
-### 11.1. Depósitos y retiros
-
-Se verificaron:
-
-- Validación de montos.
-- Actualización del saldo.
-- Registro en el historial.
-- Ventanas de confirmación.
-- Generación de comprobantes PDF.
-
-### 11.2. Pago de servicios
-
-Se realizaron las siguientes operaciones de prueba:
-
-| Servicio | Referencia | Monto |
-|---|---|---:|
-| Energía eléctrica | 123456789 | $15.00 |
-| Telefonía | 504 | $1.00 |
-
-Los pagos se procesaron correctamente.
-
-### 11.3. Verificación de saldos
-
-Saldo antes del primer pago:
-
-**$1,430.00**
-
-Después del pago de energía eléctrica:
-
-**$1,415.00**
-
-Después del pago de telefonía:
-
-**$1,414.00**
-
-Las operaciones reflejaron correctamente la disminución del saldo.
-
-### 11.4. Historial y estadísticas
-
-Se verificó que ambos pagos aparecieran registrados en el historial.
-
-El módulo de estadísticas presentó:
-
-| Tipo de operación | Cantidad | Porcentaje |
-|---|---:|---:|
-| Depósitos | 3 | 30 % |
-| Retiros | 3 | 30 % |
-| Servicios | 4 | 40 % |
-| Total | 10 | 100 % |
-
-### 11.5. Publicación
-
-Se verificó que la aplicación publicada mediante GitHub Pages funciona con los cambios sincronizados desde NetBeans.
-
----
-
-## 12. Consideraciones académicas
-
-Pokémon Bank es un simulador desarrollado exclusivamente con fines educativos.
-
-No se realizan operaciones bancarias reales.
-
-Los saldos, movimientos y datos de cuenta corresponden a información simulada.
-
-La autenticación mediante PIN es una implementación académica del lado del cliente y no constituye un mecanismo de seguridad adecuado para aplicaciones bancarias reales.
-
-La información almacenada mediante LocalStorage y SessionStorage pertenece al entorno del navegador y no representa un sistema bancario centralizado.
-
-Los comprobantes PDF generados son documentos de demostración sin validez bancaria.
-
----
-
-## 13. Autor
-
-Jose Castro: Lenguajes Interpretados en el Cliente - Año: 2026
+- Universidad Don Bosco.
+- Ingeniería en Ciencias de la Computación.
+- Lenguajes Interpretados en el Cliente.
+- Proyecto Pokémon Bank.
+- Fase 2.
+- Año 2026.
