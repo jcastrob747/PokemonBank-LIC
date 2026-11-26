@@ -1,37 +1,66 @@
-<!--
-Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
-Click nbfs://nbhost/SystemFileSystem/Templates/ClientSide/html.html to edit this template
--->
 <!DOCTYPE html>
+
+<!--
+    Pokémon Bank
+    Archivo: saldo.html
+
+    Fase 2 - Interfaz de consulta de saldo.
+
+    Responsabilidades:
+    - Presentar la información bancaria del titular.
+    - Mostrar dinámicamente el saldo disponible.
+    - Facilitar la navegación entre interfaces.
+    - Integrar el control de acceso al sistema.
+    - Presentar mensajes interactivos de error.
+
+    Simulador bancario académico.
+    Lenguajes Interpretados en el Cliente.
+-->
+
 <html lang="es">
 
 <head>
+
     <meta charset="UTF-8">
-        <!-- Control de acceso al sistema -->
-<script src="js/sesion.js"></script>
+
+    <!-- Control de acceso al sistema -->
+    <script src="js/sesion.js"></script>
 
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
 
     <title>Pokémon Bank - Consulta de saldo</title>
 
+
     <!-- Bootstrap 4.6 -->
     <link rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
 
+
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+
     <!-- Estilos personalizados -->
-    <link rel="stylesheet" href="css/styles.css">
-    
-<!-- Favicon -->
-<link rel="icon"
-      type="image/svg+xml"
-      href="images/favicon.svg">    
+    <link rel="stylesheet"
+          href="css/styles.css">
+
+
+    <!-- Favicon -->
+    <link rel="icon"
+          type="image/svg+xml"
+          href="images/favicon.svg">
 
 </head>
 
+
 <body class="dashboard-page">
 
-    <!-- Encabezado principal -->
+    <!-- ====================================== -->
+    <!-- 1. ENCABEZADO PRINCIPAL                 -->
+    <!-- ====================================== -->
+
     <header class="bank-header">
 
         <div class="container">
@@ -39,11 +68,16 @@ Click nbfs://nbhost/SystemFileSystem/Templates/ClientSide/html.html to edit this
             <div class="d-flex justify-content-between align-items-center">
 
                 <h1 class="dashboard-logo">
+
                     Pokémon Bank
+
                 </h1>
 
-                <a href="index.html" class="btn-logout">
+                <a href="index.html"
+                   class="btn-logout">
+
                     Cerrar sesión
+
                 </a>
 
             </div>
@@ -52,93 +86,164 @@ Click nbfs://nbhost/SystemFileSystem/Templates/ClientSide/html.html to edit this
 
     </header>
 
-    <!-- Contenido principal -->
+
+    <!-- ====================================== -->
+    <!-- 2. CONTENIDO PRINCIPAL                  -->
+    <!-- ====================================== -->
+
     <main class="container transaction-container">
 
+
         <!-- Navegación -->
+
         <div class="mb-4">
 
-            <a href="dashboard.html" class="back-link">
+            <a href="dashboard.html"
+               class="back-link">
+
                 ← Volver al menú principal
+
             </a>
 
         </div>
 
+
         <!-- Tarjeta de consulta -->
+
         <section class="transaction-card">
 
-            <!-- Encabezado de la operación -->
+
+            <!-- ================================== -->
+            <!-- 3. ENCABEZADO DE LA OPERACIÓN       -->
+            <!-- ================================== -->
+
             <div class="transaction-heading">
 
-                <span class="transaction-icon">
+                <span class="transaction-icon"
+                      aria-hidden="true">
+
                     💳
+
                 </span>
 
                 <h2>Consulta de saldo</h2>
 
                 <p>
+
                     Consulta la información y el saldo
                     disponible de tu cuenta bancaria.
+
                 </p>
 
             </div>
 
-            <!-- Información de la cuenta -->
-            <div class="transaction-account">
+
+            <!-- ================================== -->
+            <!-- 4. MENSAJES DEL SISTEMA             -->
+            <!-- ================================== -->
+
+            <div id="saldoMensaje"
+                 class="alert alert-danger"
+                 role="alert"
+                 aria-live="assertive"
+                 style="display: none;">
+
+            </div>
+
+
+            <!-- ================================== -->
+            <!-- 5. INFORMACIÓN BANCARIA DINÁMICA    -->
+            <!-- ================================== -->
+
+            <div class="transaction-account"
+                 id="informacionCuenta"
+                 hidden>
 
                 <h3>Información de la cuenta</h3>
 
                 <p>
+
                     <strong>Titular:</strong>
-                    Jose C.
+
+                    <span id="nombreUsuario"></span>
+
                 </p>
 
                 <p>
+
                     <strong>Número de cuenta:</strong>
-                    1002003001
+
+                    <span id="numeroCuenta"></span>
+
                 </p>
 
                 <p>
+
                     <strong>Tipo de cuenta:</strong>
-                    Cuenta de ahorros
+
+                    <span id="tipoCuenta"></span>
+
                 </p>
 
             </div>
 
-            <!-- Sección del saldo -->
-            <div class="balance-card">
+
+            <!-- ================================== -->
+            <!-- 6. SALDO DISPONIBLE                 -->
+            <!-- ================================== -->
+
+            <div class="balance-card"
+                 id="tarjetaSaldo"
+                 hidden>
 
                 <p class="balance-label">
+
                     Saldo disponible
+
                 </p>
 
-<h3 class="balance-amount" id="saldoDisponible">
-    $0.00
-</h3>
+                <h3 class="balance-amount"
+                    id="saldoDisponible"
+                    aria-live="polite">
 
-                <p class="balance-currency">
-                    Dólares estadounidenses (USD)
+                </h3>
+
+                <p class="balance-currency"
+                   id="monedaCuenta">
+
                 </p>
 
             </div>
 
-            <!-- Información adicional -->
+
+            <!-- ================================== -->
+            <!-- 7. INFORMACIÓN ADICIONAL            -->
+            <!-- ================================== -->
+
             <div class="balance-information">
 
                 <p>
+
                     El saldo mostrado corresponde
                     a una cuenta bancaria de prueba.
+
                 </p>
 
-<p>
-    El saldo disponible se actualiza automáticamente
-    después de realizar depósitos, retiros
-    y pagos de servicios.
-</p>
+                <p>
+
+                    El saldo disponible se actualiza
+                    automáticamente después de realizar
+                    depósitos, retiros y pagos de servicios.
+
+                </p>
 
             </div>
 
-            <!-- Botones -->
+
+            <!-- ================================== -->
+            <!-- 8. BOTONES DE NAVEGACIÓN            -->
+            <!-- ================================== -->
+
             <div class="transaction-buttons">
 
                 <a href="dashboard.html"
@@ -149,7 +254,7 @@ Click nbfs://nbhost/SystemFileSystem/Templates/ClientSide/html.html to edit this
                 </a>
 
                 <a href="index.html"
-                   class="btn-cancel">
+                   class="btn-cancel btn-logout">
 
                     Cerrar sesión
 
@@ -157,13 +262,19 @@ Click nbfs://nbhost/SystemFileSystem/Templates/ClientSide/html.html to edit this
 
             </div>
 
-            <!-- Aviso académico -->
+
+            <!-- ================================== -->
+            <!-- 9. AVISO ACADÉMICO                  -->
+            <!-- ================================== -->
+
             <div class="transaction-notice">
 
                 <p>
+
                     Esta pantalla forma parte de un
                     simulador bancario académico.
                     No se realizan transacciones reales.
+
                 </p>
 
             </div>
@@ -172,22 +283,45 @@ Click nbfs://nbhost/SystemFileSystem/Templates/ClientSide/html.html to edit this
 
     </main>
 
-    <!-- Pie de página -->
+
+    <!-- ====================================== -->
+    <!-- 10. PIE DE PÁGINA                       -->
+    <!-- ====================================== -->
+
     <footer class="dashboard-footer">
 
         <p>
+
             Pokémon Bank © 2026
+
             <br>
+
             Simulador bancario académico
+
         </p>
 
     </footer>
 
-<!-- Administración bancaria -->
-<script src="js/banco.js"></script>
 
-<!-- Consulta dinámica de saldo -->
-<script src="js/saldo.js"></script>
+    <!-- ====================================== -->
+    <!-- 11. DEPENDENCIAS JAVASCRIPT             -->
+    <!-- ====================================== -->
+
+
+    <!-- SweetAlert2: mensajes interactivos -->
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+
+
+    <!-- Motor bancario -->
+
+    <script src="js/banco.js"></script>
+
+
+    <!-- Módulo de consulta de saldo -->
+
+    <script src="js/saldo.js"></script>
 
 </body>
+
 </html>
