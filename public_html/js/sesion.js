@@ -1,48 +1,188 @@
-/* 
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/ClientSide/javascript.js to edit this template
- */
-
-
 /*
  * Pokémon Bank
  * Archivo: sesion.js
  *
- * Administración de sesiones del simulador bancario.
+ * Fase 2 - Administración centralizada de sesiones.
  *
- * Desafío Práctico
- * Lenguajes Interpretados en el Cliente
+ * Responsabilidades:
+ * - Registrar el inicio de sesión.
+ * - Verificar el estado de autenticación.
+ * - Proteger las páginas internas del simulador.
+ * - Administrar el cierre de sesión.
+ * - Conservar los datos bancarios de LocalStorage.
+ * - Gestionar errores de SessionStorage.
+ * - Verificar el acceso durante la navegación.
  *
- * JavaScript puro.
+ * Simulador bancario académico.
+ * Lenguajes Interpretados en el Cliente.
  */
 
+
 // ============================================
-// 1. CONFIGURACIÓN
+// 1. CONFIGURACIÓN GENERAL
 // ============================================
 
 const Sesion = {
 
     claveSesion: "pokemonBankSesion",
 
+    valorSesionActiva: "activa",
+
+    paginaLogin: "index.html",
+
+    paginaPrincipal: "dashboard.html",
+
+    botonesConfigurados: new WeakSet(),
+
 
     // ========================================
-    // 2. VERIFICAR SESIÓN ACTIVA
+    // 2. IDENTIFICAR PÁGINA ACTUAL
     // ========================================
 
-    estaActiva: function () {
+    obtenerPaginaActual: function () {
 
-        return sessionStorage.getItem(
-            this.claveSesion
-        ) === "activa";
+        const ruta = window.location.pathname;
+
+        return ruta.substring(
+            ruta.lastIndexOf("/") + 1
+        ).toLowerCase();
 
     },
 
 
     // ========================================
-    // 3. PROTEGER PÁGINAS
+    // 3. IDENTIFICAR PÁGINA DE LOGIN
+    // ========================================
+
+    esPaginaLogin: function () {
+
+        const pagina = this.obtenerPaginaActual();
+
+        return (
+            pagina === "" ||
+            pagina === this.paginaLogin
+        );
+
+    },
+
+
+    // ========================================
+    // 4. INICIAR SESIÓN
+    // ========================================
+
+    iniciarSesion: function () {
+
+        try {
+
+            sessionStorage.setItem(
+                this.claveSesion,
+                this.valorSesionActiva
+            );
+
+            if (!this.estaActiva()) {
+
+                throw new Error(
+                    "No fue posible verificar la sesión creada."
+                );
+
+            }
+
+            console.log(
+                "Pokémon Bank - Sesión iniciada correctamente."
+            );
+
+            return true;
+
+        } catch (error) {
+
+            console.error(
+                "Pokémon Bank - Error al iniciar sesión:",
+                error
+            );
+
+            return false;
+
+        }
+
+    },
+
+
+    // ========================================
+    // 5. VERIFICAR SESIÓN ACTIVA
+    // ========================================
+
+    estaActiva: function () {
+
+        try {
+
+            return sessionStorage.getItem(
+                this.claveSesion
+            ) === this.valorSesionActiva;
+
+        } catch (error) {
+
+            console.error(
+                "Pokémon Bank - Error al consultar la sesión:",
+                error
+            );
+
+            return false;
+
+        }
+
+    },
+
+
+    // ========================================
+    // 6. ELIMINAR SESIÓN
+    // ========================================
+
+    eliminarSesion: function () {
+
+        try {
+
+            // Eliminar exclusivamente la clave
+            // correspondiente a la autenticación.
+
+            sessionStorage.removeItem(
+                this.claveSesion
+            );
+
+            return sessionStorage.getItem(
+                this.claveSesion
+            ) === null;
+
+        } catch (error) {
+
+            console.error(
+                "Pokémon Bank - Error al eliminar la sesión:",
+                error
+            );
+
+            return false;
+
+        }
+
+    },
+
+
+    // ========================================
+    // 7. PROTEGER PÁGINAS INTERNAS
     // ========================================
 
     verificarAcceso: function () {
+
+        // La página de inicio de sesión
+        // debe permanecer accesible.
+
+        if (this.esPaginaLogin()) {
+
+            return true;
+
+        }
+
+
+        // Verificar autenticación en páginas internas.
 
         if (!this.estaActiva()) {
 
@@ -50,7 +190,9 @@ const Sesion = {
                 "Pokémon Bank - Acceso denegado. Sesión no iniciada."
             );
 
-            window.location.replace("index.html");
+            window.location.replace(
+                this.paginaLogin
+            );
 
             return false;
 
@@ -66,26 +208,61 @@ const Sesion = {
 
 
     // ========================================
-    // 4. CERRAR SESIÓN
+    // 8. CERRAR SESIÓN
     // ========================================
 
     cerrarSesion: function () {
 
-        sessionStorage.removeItem(
-            this.claveSesion
-        );
+        // No modificar LocalStorage.
+        // El saldo y el historial deben conservarse.
+
+        if (!this.eliminarSesion()) {
+
+            console.error(
+                "Pokémon Bank - No fue posible cerrar la sesión."
+            );
+
+            if (
+                typeof Swal !== "undefined" &&
+                typeof Swal.fire === "function"
+            ) {
+
+                Swal.fire({
+
+                    icon: "error",
+
+                    title: "Error de sesión",
+
+                    text:
+                        "No fue posible cerrar la sesión. Intenta nuevamente.",
+
+                    confirmButtonText: "Aceptar",
+
+                    confirmButtonColor: "#1e3a8a"
+
+                });
+
+            }
+
+            return false;
+
+        }
 
         console.log(
             "Pokémon Bank - Sesión cerrada correctamente."
         );
 
-        window.location.replace("index.html");
+        window.location.replace(
+            this.paginaLogin
+        );
+
+        return true;
 
     },
 
 
     // ========================================
-    // 5. CONFIGURAR BOTONES
+    // 9. CONFIGURAR BOTONES DE CIERRE
     // ========================================
 
     configurarBotones: function () {
@@ -96,15 +273,103 @@ const Sesion = {
 
         botones.forEach(function (boton) {
 
-            boton.addEventListener("click", function (evento) {
+            // Evitar registrar eventos duplicados.
 
-                evento.preventDefault();
+            if (Sesion.botonesConfigurados.has(boton)) {
 
-                Sesion.cerrarSesion();
+                return;
 
-            });
+            }
+
+            boton.addEventListener(
+                "click",
+                function (evento) {
+
+                    evento.preventDefault();
+
+                    Sesion.cerrarSesion();
+
+                }
+            );
+
+            Sesion.botonesConfigurados.add(boton);
 
         });
+
+    },
+
+
+    // ========================================
+    // 10. INICIALIZAR CONTROL DE SESIÓN
+    // ========================================
+
+    inicializar: function () {
+
+        // No aplicar restricciones a la página de login.
+
+        if (this.esPaginaLogin()) {
+
+            console.log(
+                "Pokémon Bank - Administrador de sesiones disponible."
+            );
+
+            return true;
+
+        }
+
+
+        // Verificar acceso a páginas internas.
+
+        if (!this.verificarAcceso()) {
+
+            return false;
+
+        }
+
+
+        // Configurar eventos después de cargar el DOM.
+
+        if (document.readyState === "loading") {
+
+            document.addEventListener(
+                "DOMContentLoaded",
+                function () {
+
+                    Sesion.configurarBotones();
+
+                    console.log(
+                        "Pokémon Bank - Control de sesión inicializado."
+                    );
+
+                },
+                { once: true }
+            );
+
+        } else {
+
+            this.configurarBotones();
+
+        }
+
+
+        // Verificar nuevamente la sesión cuando
+        // una página se recupera desde la caché
+        // de navegación del navegador.
+
+        window.addEventListener(
+            "pageshow",
+            function (evento) {
+
+                if (evento.persisted) {
+
+                    Sesion.verificarAcceso();
+
+                }
+
+            }
+        );
+
+        return true;
 
     }
 
@@ -112,22 +377,7 @@ const Sesion = {
 
 
 // ============================================
-// 6. INICIALIZACIÓN
+// 11. EJECUTAR ADMINISTRADOR DE SESIONES
 // ============================================
 
-// Verificar acceso inmediatamente.
-const accesoPermitido = Sesion.verificarAcceso();
-
-if (accesoPermitido) {
-
-    document.addEventListener("DOMContentLoaded", function () {
-
-        Sesion.configurarBotones();
-
-        console.log(
-            "Pokémon Bank - Control de sesión inicializado."
-        );
-
-    });
-
-}
+Sesion.inicializar();

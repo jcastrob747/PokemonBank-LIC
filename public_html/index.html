@@ -2,29 +2,58 @@
 <html lang="es">
 
 <head>
-    <meta charset="UTF-8">
 
+    <meta charset="UTF-8">
 
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
 
+    <meta name="description"
+          content="Pokémon Bank - Simulador bancario académico.">
+
     <title>Pokémon Bank - Inicio de sesión</title>
 
-    <!-- Bootstrap 4.6 -->
+
+    <!-- =======================================
+         1. BOOTSTRAP 4.6
+         ======================================= -->
+
     <link rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
 
-    <!-- Estilos personalizados -->
-    <link rel="stylesheet" href="css/styles.css">
- 
- <!-- Icono del sitio -->
-<link rel="icon"
-      type="image/svg+xml"
-      href="images/favicon.svg">   
-    
+
+    <!-- =======================================
+         2. SWEETALERT2
+         ======================================= -->
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/sweetalert2@11.14.5/dist/sweetalert2.min.css">
+
+
+    <!-- =======================================
+         3. ESTILOS PERSONALIZADOS
+         ======================================= -->
+
+    <link rel="stylesheet"
+          href="css/styles.css">
+
+
+    <!-- =======================================
+         4. ICONO DEL SITIO
+         ======================================= -->
+
+    <link rel="icon"
+          type="image/svg+xml"
+          href="images/favicon.svg">
+
 </head>
 
+
 <body>
+
+    <!-- =======================================
+         5. CONTENEDOR DE INICIO DE SESIÓN
+         ======================================= -->
 
     <main class="login-page">
 
@@ -38,7 +67,12 @@
                 Bienvenido a tu cajero automático
             </p>
 
-            <form id="loginForm">
+
+            <!-- =================================
+                 6. FORMULARIO DE AUTENTICACIÓN
+                 ================================= -->
+
+            <form id="loginForm" novalidate>
 
                 <div class="form-group">
 
@@ -49,6 +83,7 @@
                     <input
                         type="password"
                         id="pin"
+                        name="pin"
                         class="form-control pin-input"
                         placeholder="••••"
                         maxlength="4"
@@ -56,36 +91,90 @@
                         pattern="[0-9]{4}"
                         inputmode="numeric"
                         autocomplete="off"
+                        aria-describedby="loginMensaje"
                         required
                     >
-<div
-    id="loginMensaje"
-    class="alert alert-danger mt-3"
-    role="alert"
-    aria-live="polite"
-    style="display: none;">
-</div>
+
+
+                    <!-- Mensaje de error de respaldo -->
+
+                    <div
+                        id="loginMensaje"
+                        class="alert alert-danger mt-3"
+                        role="alert"
+                        aria-live="polite"
+                        style="display: none;">
+                    </div>
+
                 </div>
 
-                <button type="submit" class="btn-pokemon">
+
+                <!-- Botón de autenticación -->
+
+                <button
+                    type="submit"
+                    class="btn-pokemon">
+
                     Ingresar
+
                 </button>
 
             </form>
 
+
+            <!-- =================================
+                 7. PIE DE PÁGINA
+                 ================================= -->
+
             <p class="login-footer">
+
                 Pokémon Bank © 2026
+
                 <br>
+
                 Simulador bancario académico
+
             </p>
 
         </div>
 
     </main>
 
-   
-<!-- Validación de inicio de sesión -->
-<script src="js/login.js"></script>
-    
+
+    <!-- =======================================
+         8. BIBLIOTECAS EXTERNAS
+         ======================================= -->
+
+
+    <!-- ValidateJS 0.13.1 -->
+
+    <script src="https://cdn.jsdelivr.net/npm/validate.js@0.13.1/validate.min.js"></script>
+
+
+    <!-- SweetAlert2 11.14.5 -->
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.14.5/dist/sweetalert2.min.js"></script>
+
+
+    <!-- =======================================
+         9. MÓDULOS INTERNOS
+         ======================================= -->
+
+
+    <!-- Motor bancario y LocalStorage -->
+
+    <script src="js/banco.js"></script>
+
+
+    <!-- Administración de sesiones -->
+
+    <script src="js/sesion.js"></script>
+
+
+    <!-- Validación y autenticación del usuario -->
+
+    <script src="js/login.js"></script>
+
 </body>
+
 </html>
