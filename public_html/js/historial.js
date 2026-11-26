@@ -1,228 +1,890 @@
-/* 
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/ClientSide/javascript.js to edit this template
- */
-
-
 /*
  * Pokémon Bank
- * Historial dinámico de transacciones
  *
- * Proyecto académico
+ * Archivo: historial.js
+ *
+ * Fase 2 - Historial de transacciones bancarias.
+ *
+ * Responsabilidades:
+ *
+ * - Recuperar información desde LocalStorage.
+ * - Presentar información dinámica del usuario.
+ * - Mostrar las transacciones registradas.
+ * - Clasificar las operaciones bancarias.
+ * - Presentar saldos anteriores y posteriores.
+ * - Permitir descargar comprobantes PDF.
+ * - Gestionar errores de recuperación.
+ *
  * Lenguajes Interpretados en el Cliente
+ * Proyecto académico.
  */
 
-// Esperar a que el documento HTML termine de cargar
-document.addEventListener("DOMContentLoaded", function () {
+"use strict";
 
-    console.log(
-        "Pokémon Bank - Historial cargado correctamente."
-    );
+const Historial = {
 
-    // Obtener elementos del HTML
-    const tablaHistorial =
-        document.getElementById("tablaHistorial");
+    // ==========================================
+    // 1. FORMATEAR MONTOS MONETARIOS
+    // ==========================================
 
-    const totalTransacciones =
-        document.getElementById("totalTransacciones");
+    formatearMonto: function (centavos) {
 
-    // Verificar que los elementos existan
-    if (!tablaHistorial || !totalTransacciones) {
+        if (!Number.isSafeInteger(centavos)) {
 
-        console.error(
-            "No se encontraron los elementos del historial."
+            throw new Error(
+                "El monto monetario no es válido."
+            );
+
+        }
+
+        return "$" + (centavos / 100).toLocaleString(
+            "en-US",
+            {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }
         );
 
-        return;
-    }
+    },
 
-    // Verificar que el módulo bancario esté disponible
-    if (
-        typeof Banco === "undefined" ||
-        typeof Banco.obtenerHistorial !== "function"
+    // ==========================================
+    // 2. FORMATEAR FECHA
+    // ==========================================
+
+    formatearFecha: function (fecha) {
+
+        const fechaOperacion = new Date(fecha);
+
+        if (Number.isNaN(fechaOperacion.getTime())) {
+
+            return "Fecha no disponible";
+
+        }
+
+        return fechaOperacion.toLocaleString(
+            "es-SV",
+            {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit"
+            }
+        );
+
+    },
+
+    // ==========================================
+    // 3. CREAR CELDAS DE LA TABLA
+    // ==========================================
+
+    crearCelda: function (contenido, clase = "") {
+
+        const celda = document.createElement("td");
+
+        celda.textContent = String(contenido);
+
+        if (clase) {
+
+            celda.className = clase;
+
+        }
+
+        return celda;
+
+    },
+
+    // ==========================================
+    // 4. CLASIFICAR OPERACIONES
+    // ==========================================
+
+    obtenerTipo: function (tipo) {
+
+        switch (tipo) {
+
+            case "Depósito":
+
+                return {
+
+                    nombre: "Depósito",
+
+                    clase: "badge badge-success",
+
+                    signo: "+",
+
+                    claseMonto: "amount-positive"
+
+                };
+
+            case "Retiro":
+
+                return {
+
+                    nombre: "Retiro",
+
+                    clase: "badge badge-danger",
+
+                    signo: "-",
+
+                    claseMonto: "amount-negative"
+
+                };
+
+            case "Servicio":
+
+                return {
+
+                    nombre: "Servicio",
+
+                    clase: "badge badge-warning",
+
+                    signo: "-",
+
+                    claseMonto: "amount-negative"
+
+                };
+
+            default:
+
+                throw new Error(
+                    "Tipo de transacción no reconocido."
+                );
+
+        }
+
+    },
+
+    // ==========================================
+    // 5. MOSTRAR NOTIFICACIONES
+    // ==========================================
+
+    notificar: function (titulo, mensaje, icono) {
+
+        if (
+            typeof Swal !== "undefined" &&
+            typeof Swal.fire === "function"
+        ) {
+
+            return Swal.fire({
+
+                title: titulo,
+
+                text: mensaje,
+
+                icon: icono,
+
+                confirmButtonText: "Aceptar",
+
+                confirmButtonColor: "#203783"
+
+            });
+
+        }
+
+        console.error(titulo, mensaje);
+
+        return Promise.resolve();
+
+    },
+
+    // ==========================================
+    // 6. DESCARGAR COMPROBANTE
+    // ==========================================
+
+    descargarComprobante: async function (
+        identificador,
+        boton
     ) {
 
-        console.error(
-            "El módulo Banco no está disponible."
+        boton.disabled = true;
+
+        try {
+
+            // Verificar sesión activa.
+
+            if (
+                typeof Sesion === "undefined" ||
+                !Sesion.estaActiva()
+            ) {
+
+                throw new Error(
+                    "La sesión bancaria no está activa."
+                );
+
+            }
+
+            // Verificar disponibilidad de jsPDF.
+
+            if (
+                !window.jspdf ||
+                !window.jspdf.jsPDF
+            ) {
+
+                throw new Error(
+                    "La biblioteca jsPDF no está disponible."
+                );
+
+            }
+
+            // Verificar módulo de comprobantes.
+
+            if (
+                typeof Comprobantes === "undefined" ||
+                typeof Comprobantes.generarDesdeTransaccion !== "function"
+            ) {
+
+                throw new Error(
+                    "El módulo de comprobantes no está disponible."
+                );
+
+            }
+
+            // Recuperar y validar información bancaria.
+
+            const datos = Banco.obtenerDatos();
+
+            if (!Banco.validarDatos(datos)) {
+
+                throw new Error(
+                    "La información bancaria no es válida."
+                );
+
+            }
+
+            // Verificar existencia de la transacción.
+
+            const transaccion = Banco.obtenerHistorial().find(
+                function (movimiento) {
+
+                    return movimiento.id === identificador;
+
+                }
+            );
+
+            if (!transaccion) {
+
+                throw new Error(
+                    "No se encontró la transacción solicitada."
+                );
+
+            }
+
+            // Generar PDF desde el historial existente.
+            // No se ejecuta una nueva operación bancaria.
+
+            const generado = await Comprobantes.generarDesdeTransaccion(
+                transaccion
+            );
+
+            if (generado !== true) {
+
+                throw new Error(
+                    "No fue posible generar el comprobante."
+                );
+
+            }
+
+            console.log(
+                "Pokémon Bank - Comprobante descargado:",
+                identificador
+            );
+
+            await this.notificar(
+
+                "Comprobante generado",
+
+                "El comprobante PDF se generó correctamente.",
+
+                "success"
+
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Pokémon Bank - Error al descargar comprobante:",
+                error
+            );
+
+            await this.notificar(
+
+                "Comprobante no disponible",
+
+                "No fue posible generar el comprobante solicitado.",
+
+                "error"
+
+            );
+
+        } finally {
+
+            boton.disabled = false;
+
+        }
+
+    },
+
+    // ==========================================
+    // 7. CREAR BOTÓN DE COMPROBANTE
+    // ==========================================
+
+    crearBotonComprobante: function (transaccion) {
+
+        const celda = document.createElement("td");
+
+        const boton = document.createElement("button");
+
+        boton.type = "button";
+
+        boton.className = "btn btn-primary btn-sm";
+
+        boton.textContent = "Descargar PDF";
+
+        boton.dataset.transaccionId = transaccion.id;
+
+        boton.setAttribute(
+            "aria-label",
+            "Descargar comprobante de " + transaccion.tipo
         );
 
-        return;
-    }
+        boton.addEventListener(
+            "click",
+            function () {
 
-    // Obtener las transacciones almacenadas
-    const historial = Banco.obtenerHistorial();
+                Historial.descargarComprobante(
+                    transaccion.id,
+                    boton
+                );
 
-    // Verificar que el resultado sea un arreglo
-    if (!Array.isArray(historial)) {
-
-        console.error(
-            "El historial bancario no tiene un formato válido."
+            }
         );
 
-        return;
-    }
+        celda.appendChild(boton);
 
-    // Actualizar cantidad de transacciones
-    totalTransacciones.textContent = historial.length;
+        return celda;
 
-    // Limpiar tabla
-    tablaHistorial.innerHTML = "";
+    },
 
-    // Verificar si existen movimientos
-    if (historial.length === 0) {
+    // ==========================================
+    // 8. CREAR FILA DE TRANSACCIÓN
+    // ==========================================
+
+    crearFila: function (transaccion) {
+
+        const fila = document.createElement("tr");
+
+        fila.dataset.transaccionId = transaccion.id;
+
+        // Clasificar la operación.
+
+        const tipo = this.obtenerTipo(
+            transaccion.tipo
+        );
+
+        // Fecha de la operación.
+
+        fila.appendChild(
+
+            this.crearCelda(
+                this.formatearFecha(transaccion.fecha)
+            )
+
+        );
+
+        // Identificador único.
+
+        const celdaIdentificador = this.crearCelda(
+            transaccion.id,
+            "small"
+        );
+
+        celdaIdentificador.title = transaccion.id;
+
+        fila.appendChild(celdaIdentificador);
+
+        // Tipo de operación.
+
+        const celdaTipo = document.createElement("td");
+
+        const etiqueta = document.createElement("span");
+
+        etiqueta.className = tipo.clase;
+
+        etiqueta.textContent = tipo.nombre;
+
+        celdaTipo.appendChild(etiqueta);
+
+        fila.appendChild(celdaTipo);
+
+        // Descripción.
+
+        fila.appendChild(
+
+            this.crearCelda(
+                transaccion.descripcion
+            )
+
+        );
+
+        // Saldo anterior.
+
+        fila.appendChild(
+
+            this.crearCelda(
+
+                this.formatearMonto(
+                    transaccion.saldoAnteriorCentavos
+                ),
+
+                "text-nowrap"
+
+            )
+
+        );
+
+        // Monto de la operación.
+
+        fila.appendChild(
+
+            this.crearCelda(
+
+                tipo.signo + this.formatearMonto(
+                    transaccion.montoCentavos
+                ),
+
+                tipo.claseMonto + " text-nowrap"
+
+            )
+
+        );
+
+        // Saldo posterior.
+
+        fila.appendChild(
+
+            this.crearCelda(
+
+                this.formatearMonto(
+                    transaccion.saldoPosteriorCentavos
+                ),
+
+                "font-weight-bold text-nowrap"
+
+            )
+
+        );
+
+        // Comprobante PDF.
+
+        fila.appendChild(
+
+            this.crearBotonComprobante(
+                transaccion
+            )
+
+        );
+
+        return fila;
+
+    },
+
+    // ==========================================
+    // 9. MOSTRAR INFORMACIÓN DEL USUARIO
+    // ==========================================
+
+    mostrarUsuario: function (usuario) {
+
+        document.getElementById(
+            "nombreUsuario"
+        ).textContent = usuario.nombre;
+
+        document.getElementById(
+            "numeroCuenta"
+        ).textContent = usuario.cuenta;
+
+        document.getElementById(
+            "tipoCuenta"
+        ).textContent = usuario.tipoCuenta;
+
+    },
+
+    // ==========================================
+    // 10. MOSTRAR RESUMEN DE TRANSACCIONES
+    // ==========================================
+
+    mostrarResumen: function (historial) {
+
+        const resumen = {
+
+            depositos: 0,
+
+            retiros: 0,
+
+            servicios: 0
+
+        };
+
+        historial.forEach(function (transaccion) {
+
+            switch (transaccion.tipo) {
+
+                case "Depósito":
+
+                    resumen.depositos++;
+
+                    break;
+
+                case "Retiro":
+
+                    resumen.retiros++;
+
+                    break;
+
+                case "Servicio":
+
+                    resumen.servicios++;
+
+                    break;
+
+                default:
+
+                    throw new Error(
+                        "Se encontró una operación desconocida."
+                    );
+
+            }
+
+        });
+
+        document.getElementById(
+            "totalTransacciones"
+        ).textContent = historial.length;
+
+        document.getElementById(
+            "totalDepositos"
+        ).textContent = resumen.depositos;
+
+        document.getElementById(
+            "totalRetiros"
+        ).textContent = resumen.retiros;
+
+        document.getElementById(
+            "totalServicios"
+        ).textContent = resumen.servicios;
+
+        return resumen;
+
+    },
+
+    // ==========================================
+    // 11. MOSTRAR HISTORIAL VACÍO
+    // ==========================================
+
+    mostrarHistorialVacio: function (tabla) {
 
         const fila = document.createElement("tr");
 
         const celda = document.createElement("td");
 
-        celda.colSpan = 4;
+        celda.colSpan = 8;
 
-        celda.className = "text-center";
+        celda.className = "text-center text-muted p-4";
 
         celda.textContent =
             "No existen transacciones registradas.";
 
         fila.appendChild(celda);
 
-        tablaHistorial.appendChild(fila);
+        tabla.appendChild(fila);
 
-        console.log(
-            "No existen movimientos bancarios registrados."
+    },
+
+    // ==========================================
+    // 12. MOSTRAR TRANSACCIONES
+    // ==========================================
+
+    mostrarTransacciones: function (historial) {
+
+        const tabla = document.getElementById(
+            "tablaHistorial"
         );
 
-        return;
-    }
+        tabla.textContent = "";
 
-    // Recorrer las transacciones
-    historial.forEach(function (transaccion) {
+        // Verificar si existen movimientos.
 
-        // Crear fila
-        const fila = document.createElement("tr");
+        if (historial.length === 0) {
 
-        // Crear celdas
-        const celdaFecha = document.createElement("td");
+            this.mostrarHistorialVacio(tabla);
 
-        const celdaTipo = document.createElement("td");
-
-        const celdaDescripcion = document.createElement("td");
-
-        const celdaMonto = document.createElement("td");
-
-        // Fecha
-        celdaFecha.textContent =
-            transaccion.fecha || "Sin fecha";
-
-        // Tipo de transacción
-        const tipo = String(
-            transaccion.tipo || ""
-        ).trim();
-
-        const tipoNormalizado = tipo.toLowerCase();
-
-        // Crear etiqueta visual
-        const etiqueta = document.createElement("span");
-
-        etiqueta.textContent = tipo || "Otro";
-
-        // Identificar el tipo de operación
-        const esDeposito =
-            tipoNormalizado === "depósito" ||
-            tipoNormalizado === "deposito";
-
-        const esRetiro =
-            tipoNormalizado === "retiro";
-
-        const esServicio =
-            tipoNormalizado === "servicio" ||
-            tipoNormalizado === "pago de servicio" ||
-            tipoNormalizado === "pago de servicios";
-
-        if (esDeposito) {
-
-            etiqueta.className =
-                "badge badge-success";
-
-        } else if (esRetiro) {
-
-            etiqueta.className =
-                "badge badge-danger";
-
-        } else if (esServicio) {
-
-            etiqueta.className =
-                "badge badge-warning";
-
-        } else {
-
-            etiqueta.className =
-                "badge badge-secondary";
+            return;
 
         }
 
-        celdaTipo.appendChild(etiqueta);
+        // Crear un fragmento para optimizar
+        // la actualización del documento HTML.
 
-        // Descripción
-        celdaDescripcion.textContent =
-            transaccion.descripcion || "Sin descripción";
+        const fragmento =
+            document.createDocumentFragment();
 
-        // Monto
-        const monto = Number(transaccion.monto);
+        // Mantener el orden original de las operaciones.
 
-        if (!Number.isFinite(monto)) {
+        historial.forEach(function (transaccion) {
 
-            celdaMonto.textContent = "Monto inválido";
+            fragmento.appendChild(
 
-        } else {
+                Historial.crearFila(transaccion)
 
-            const montoFormateado =
-                Math.abs(monto).toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                });
+            );
 
-            if (esDeposito) {
+        });
 
-                celdaMonto.textContent =
-                    "+$" + montoFormateado;
+        tabla.appendChild(fragmento);
 
-                celdaMonto.className =
-                    "amount-positive";
+    },
 
-            } else {
+    // ==========================================
+    // 13. MOSTRAR ERROR DE RECUPERACIÓN
+    // ==========================================
 
-                celdaMonto.textContent =
-                    "-$" + montoFormateado;
+    mostrarError: function () {
 
-                celdaMonto.className =
-                    "amount-negative";
+        const elementos = [
+
+            "informacionCuenta",
+
+            "resumenHistorial",
+
+            "contenedorHistorial"
+
+        ];
+
+        elementos.forEach(function (id) {
+
+            const elemento =
+                document.getElementById(id);
+
+            if (elemento) {
+
+                elemento.classList.add("d-none");
 
             }
 
+        });
+
+        const tabla = document.getElementById(
+            "tablaHistorial"
+        );
+
+        if (tabla) {
+
+            tabla.textContent = "";
+
         }
 
-        // Agregar celdas a la fila
-        fila.appendChild(celdaFecha);
+        const mensaje = document.getElementById(
+            "mensajeErrorHistorial"
+        );
 
-        fila.appendChild(celdaTipo);
+        if (mensaje) {
 
-        fila.appendChild(celdaDescripcion);
+            mensaje.classList.remove("d-none");
 
-        fila.appendChild(celdaMonto);
+        }
 
-        // Agregar fila a la tabla
-        tablaHistorial.appendChild(fila);
+        this.notificar(
 
-    });
+            "Historial no disponible",
 
-    // Confirmación en consola
-    console.log(
-        "Total de transacciones cargadas:",
-        historial.length
-    );
+            "No fue posible recuperar la información bancaria. Cierra sesión e intenta nuevamente.",
 
-    console.log(
-        "Historial bancario:",
-        historial
-    );
+            "error"
 
-});
+        );
+
+    },
+
+    // ==========================================
+    // 14. INICIALIZAR MÓDULO
+    // ==========================================
+
+    inicializar: function () {
+
+        try {
+
+            // Verificar los elementos requeridos.
+
+            const elementosRequeridos = [
+
+                "nombreUsuario",
+
+                "numeroCuenta",
+
+                "tipoCuenta",
+
+                "totalTransacciones",
+
+                "totalDepositos",
+
+                "totalRetiros",
+
+                "totalServicios",
+
+                "tablaHistorial",
+
+                "informacionCuenta",
+
+                "resumenHistorial",
+
+                "contenedorHistorial",
+
+                "mensajeErrorHistorial"
+
+            ];
+
+            elementosRequeridos.forEach(function (id) {
+
+                if (!document.getElementById(id)) {
+
+                    throw new Error(
+                        "Elemento HTML no encontrado: " + id
+                    );
+
+                }
+
+            });
+
+            // Verificar sesión.
+
+            if (
+                typeof Sesion === "undefined" ||
+                !Sesion.estaActiva()
+            ) {
+
+                window.location.replace("index.html");
+
+                return;
+
+            }
+
+            // Verificar disponibilidad del motor bancario.
+
+            if (typeof Banco === "undefined") {
+
+                throw new Error(
+                    "El motor bancario no está disponible."
+                );
+
+            }
+
+            // Inicializar motor bancario.
+
+            if (!Banco.inicializar()) {
+
+                throw new Error(
+                    "No fue posible inicializar el motor bancario."
+                );
+
+            }
+
+            // Recuperar información persistente.
+
+            const datos = Banco.obtenerDatos();
+
+            // Validar integridad de la información.
+
+            if (!Banco.validarDatos(datos)) {
+
+                throw new Error(
+                    "La estructura bancaria no es válida."
+                );
+
+            }
+
+            // Recuperar usuario e historial.
+
+            const usuario = Banco.obtenerUsuario();
+
+            const historial = Banco.obtenerHistorial();
+
+            if (!Array.isArray(historial)) {
+
+                throw new Error(
+                    "El historial bancario no es válido."
+                );
+
+            }
+
+            // Actualizar información de la cuenta.
+
+            this.mostrarUsuario(usuario);
+
+            // Actualizar resumen.
+
+            const resumen = this.mostrarResumen(
+                historial
+            );
+
+            // Presentar movimientos.
+
+            this.mostrarTransacciones(historial);
+
+            // Mostrar información validada.
+
+            document.getElementById(
+                "informacionCuenta"
+            ).classList.remove("d-none");
+
+            document.getElementById(
+                "resumenHistorial"
+            ).classList.remove("d-none");
+
+            document.getElementById(
+                "contenedorHistorial"
+            ).classList.remove("d-none");
+
+            document.getElementById(
+                "mensajeErrorHistorial"
+            ).classList.add("d-none");
+
+            // Confirmar inicialización.
+
+            console.log(
+                "Pokémon Bank - Historial de Fase 2 inicializado."
+            );
+
+            console.log(
+                "Total de transacciones:",
+                historial.length
+            );
+
+            console.table(resumen);
+
+        } catch (error) {
+
+            console.error(
+                "Pokémon Bank - Error durante la consulta del historial:",
+                error
+            );
+
+            this.mostrarError();
+
+        }
+
+    }
+
+};
+
+// ==========================================
+// 15. INICIALIZACIÓN DEL DOCUMENTO
+// ==========================================
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        Historial.inicializar();
+
+    }
+);
