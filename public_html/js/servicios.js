@@ -1,15 +1,9 @@
 /*
- * Pokémon Bank
+ * Pokémon Bank - Fase 2
  * Archivo: servicios.js
  *
- * Administración de pagos de servicios.
- *
- * Bibliotecas:
- * - SweetAlert2
- * - jsPDF (mediante comprobantes.js)
- *
- * Simulador bancario académico.
- * Lenguajes Interpretados en el Cliente.
+ * Procesamiento de pagos de servicios.
+ * Validación de servicio, referencia, monto y saldo.
  */
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -17,572 +11,466 @@ document.addEventListener("DOMContentLoaded", function () {
     "use strict";
 
     // ==========================================
-    // 1. OBTENER ELEMENTOS DEL FORMULARIO
+    // 1. ELEMENTOS DE LA INTERFAZ
     // ==========================================
 
-    const formulario =
-        document.getElementById("formServicios");
-
-    const campoServicio =
-        document.getElementById("servicio");
-
-    const campoReferencia =
-        document.getElementById("referencia");
-
-    const campoMonto =
-        document.getElementById("monto");
-
-
-    // ==========================================
-    // 2. VERIFICAR ELEMENTOS
-    // ==========================================
+    const formulario = document.getElementById("formServicios");
+    const campoServicio = document.getElementById("servicio");
+    const campoReferencia = document.getElementById("referencia");
+    const campoMonto = document.getElementById("monto");
+    const mensaje = document.getElementById("mensajeServicios");
 
     if (
         !formulario ||
         !campoServicio ||
         !campoReferencia ||
-        !campoMonto
+        !campoMonto ||
+        !mensaje
     ) {
-
-        console.error(
-            "Error: No se encontraron los elementos del formulario."
-        );
-
+        console.error("Pokémon Bank - Formulario de servicios incompleto.");
         return;
     }
 
+    let procesando = false;
 
     // ==========================================
-    // 3. VERIFICAR MODULOS
+    // 2. CATÁLOGO DE SERVICIOS
     // ==========================================
 
-    if (typeof Banco === "undefined") {
+    const serviciosPermitidos = Object.freeze({
 
-        console.error(
-            "Error: El módulo banco.js no está disponible."
-        );
+        electricidad: "Energía eléctrica",
+        internet: "Internet",
+        telefonia: "Telefonía",
+        agua: "Agua potable"
 
-        alert(
-            "No fue posible cargar el sistema bancario."
-        );
+    });
 
-        return;
+    // ==========================================
+    // 3. FUNCIONES AUXILIARES
+    // ==========================================
+
+    function formatearMonto(monto) {
+        return "$" + Number(monto).toFixed(2);
     }
 
+    function mostrarMensaje(texto, tipo) {
 
-    if (typeof Swal === "undefined") {
+        mensaje.textContent = texto;
+        mensaje.className = "mt-3 alert alert-" + tipo;
 
-        console.error(
-            "Error: SweetAlert2 no está disponible."
-        );
-
-        alert(
-            "No fue posible cargar el módulo de notificaciones."
-        );
-
-        return;
     }
 
+    function limpiarMensaje() {
+
+        mensaje.textContent = "";
+        mensaje.className = "mt-3";
+
+    }
 
     // ==========================================
-    // 4. CONTROL DE OPERACIONES
+    // 4. INICIALIZACIÓN DEL MÓDULO
     // ==========================================
 
-    let procesandoPago = false;
-    
-    // Convertir texto a contenido HTML seguro
-function escaparHTML(valor) {
+    try {
 
-    return String(valor).replace(
-        /[&<>"']/g,
-        function (caracter) {
-
-            const entidades = {
-                "&": "&amp;",
-                "<": "&lt;",
-                ">": "&gt;",
-                '"': "&quot;",
-                "'": "&#39;"
-            };
-
-            return entidades[caracter];
-
+        if (
+            typeof Banco === "undefined" ||
+            typeof Transacciones === "undefined" ||
+            typeof validate !== "function" ||
+            typeof Swal === "undefined"
+        ) {
+            throw new Error("Dependencias del módulo no disponibles.");
         }
-    );
 
-}
+        Transacciones.cargarUsuario();
 
+        console.log(
+            "Pokémon Bank - Módulo de servicios de Fase 2 inicializado."
+        );
 
-    // ==========================================
-    // 5. MOSTRAR ERRORES
-    // ==========================================
+    } catch (error) {
 
-    async function mostrarError(mensaje) {
+        console.error("Pokémon Bank - Error de inicialización:", error);
 
-        await Swal.fire({
+        mostrarMensaje(
+            "No fue posible inicializar el módulo de servicios.",
+            "danger"
+        );
 
-            icon: "error",
+        formulario.querySelectorAll("input, select, button").forEach(
+            function (elemento) {
+                elemento.disabled = true;
+            }
+        );
 
-            title: "Operación no válida",
-
-            text: mensaje,
-
-            confirmButtonText: "Aceptar",
-
-            confirmButtonColor: "#ffcc00"
-
-        });
+        return;
 
     }
 
-
     // ==========================================
-    // 6. PROCESAR FORMULARIO
+    // 5. PROCESAMIENTO DEL FORMULARIO
     // ==========================================
 
-    formulario.addEventListener(
-        "submit",
-        async function (evento) {
+    formulario.addEventListener("submit", async function (evento) {
 
-            evento.preventDefault();
+        evento.preventDefault();
 
+        if (procesando) {
+            return;
+        }
 
-            // Evitar operaciones duplicadas
-            if (procesandoPago) {
+        procesando = true;
 
-                return;
-            }
+        limpiarMensaje();
 
+        try {
 
-            // ==================================
-            // 7. OBTENER DATOS
-            // ==================================
-
-            const servicio =
-                campoServicio.value;
-
-            const referencia =
-                campoReferencia.value.trim();
-
-            const monto =
-                Number(campoMonto.value);
-
+            const servicio = campoServicio.value;
+            const referencia = campoReferencia.value.trim();
+            const valorMonto = campoMonto.value.trim();
 
             // ==================================
-            // 8. VALIDAR SERVICIO
+            // 6. VALIDACIÓN MEDIANTE VALIDATE.JS
             // ==================================
 
-            if (!servicio) {
+            const errores = validate(
+                {
+                    servicio: servicio,
+                    referencia: referencia,
+                    monto: valorMonto
+                },
+                {
+                    servicio: {
+                        presence: {
+                            allowEmpty: false,
+                            message: "^Selecciona un servicio."
+                        },
+                        inclusion: {
+                            within: Object.keys(serviciosPermitidos),
+                            message: "^El servicio seleccionado no es válido."
+                        }
+                    },
 
-                await mostrarError(
-                    "Selecciona el servicio que deseas pagar."
-                );
+                    referencia: {
+                        presence: {
+                            allowEmpty: false,
+                            message: "^Ingresa el número de referencia."
+                        },
+                        length: {
+                            minimum: 1,
+                            maximum: 20,
+                            message: "^La referencia debe contener entre 1 y 20 caracteres."
+                        },
+                        format: {
+                            pattern: /^[A-Za-z0-9-]+$/,
+                            message: "^La referencia solamente puede contener letras, números y guiones."
+                        }
+                    },
 
-                campoServicio.focus();
+                    monto: {
+                        presence: {
+                            allowEmpty: false,
+                            message: "^Ingresa el monto del pago."
+                        },
+                        numericality: {
+                            greaterThan: 0,
+                            message: "^El monto debe ser mayor a $0.00."
+                        },
+                        format: {
+                            pattern: /^\d+(\.\d{1,2})?$/,
+                            message: "^Ingresa un monto con un máximo de dos decimales."
+                        }
+                    }
+                }
+            );
 
-                return;
-            }
+            if (errores) {
 
+                const listaErrores = [];
 
-            // ==================================
-            // 9. VALIDAR REFERENCIA
-            // ==================================
+                Object.keys(errores).forEach(function (campo) {
 
-            if (referencia === "") {
-
-                await mostrarError(
-                    "Ingresa el número de referencia o factura."
-                );
-
-                campoReferencia.focus();
-
-                return;
-            }
-
-
-            // ==================================
-            // 10. VALIDAR MONTO
-            // ==================================
-
-            if (
-                !Number.isFinite(monto) ||
-                monto <= 0
-            ) {
-
-                await mostrarError(
-                    "Ingresa un monto válido mayor a $0.00."
-                );
-
-                campoMonto.focus();
-
-                return;
-            }
-
-
-            // Validar máximo dos decimales
-
-            if (
-                Math.abs(
-                    monto * 100 -
-                    Math.round(monto * 100)
-                ) > 0.000001
-            ) {
-
-                await mostrarError(
-                    "El monto debe contener como máximo dos decimales."
-                );
-
-                campoMonto.focus();
-
-                return;
-            }
-
-
-            // ==================================
-            // 11. OBTENER NOMBRE DEL SERVICIO
-            // ==================================
-
-            const nombreServicio =
-                campoServicio.options[
-                    campoServicio.selectedIndex
-                ].text;
-
-// Proteger los datos que se mostrarán en SweetAlert2
-const servicioSeguro = escaparHTML(nombreServicio);
-
-const referenciaSegura = escaparHTML(referencia);
-
-            // ==================================
-            // 12. CONSULTAR SALDO
-            // ==================================
-
-            const saldoAnterior =
-                Banco.obtenerSaldo();
-
-
-            // ==================================
-            // 13. VALIDAR FONDOS
-            // ==================================
-
-            if (monto > saldoAnterior) {
-
-                await mostrarError(
-                    "Saldo insuficiente. " +
-                    "Saldo disponible: $" +
-                    saldoAnterior.toFixed(2)
-                );
-
-                campoMonto.focus();
-
-                return;
-            }
-
-
-            // ==================================
-            // 14. CONFIRMAR PAGO
-            // ==================================
-
-            procesandoPago = true;
-
-            try {
-
-                const confirmacion = await Swal.fire({
-
-                    title: "Confirmar pago",
-
-                    icon: "question",
-
-                    html:
-    "<strong>Servicio:</strong> " +
-    servicioSeguro +
-    "<br>" +
-
-    "<strong>Referencia:</strong> " +
-    referenciaSegura +
-    "<br>" +
-
-                        "<strong>Monto:</strong> $" +
-                        monto.toFixed(2) +
-                        "<br>" +
-
-                        "<strong>Saldo actual:</strong> $" +
-                        saldoAnterior.toFixed(2),
-
-                    showCancelButton: true,
-
-                    confirmButtonText: "Confirmar pago",
-
-                    cancelButtonText: "Cancelar",
-
-                    confirmButtonColor: "#ffcc00",
-
-                    cancelButtonColor: "#6c757d"
+                    listaErrores.push(errores[campo][0]);
 
                 });
 
+                await Swal.fire({
 
-                if (!confirmacion.isConfirmed) {
+                    title: "Datos incorrectos",
 
-                    console.log(
-                        "El usuario canceló el pago."
-                    );
+                    text: listaErrores.join(" "),
 
-                    return;
-                }
+                    icon: "error",
 
+                    confirmButtonText: "Aceptar",
+                    confirmButtonColor: "#ffcc00"
 
-                // ==============================
-                // 15. PROCESAR PAGO
-                // ==============================
+                });
 
-                const resultado =
-                    Banco.pagarServicio(
-                        nombreServicio,
-                        referencia,
-                        monto
-                    );
+                return;
 
+            }
 
-                // ==============================
-                // 16. VERIFICAR RESULTADO
-                // ==============================
+            const monto = Number(valorMonto);
 
-                if (!resultado.exito) {
+            if (
+                !Number.isFinite(monto) ||
+                !Number.isSafeInteger(Math.round(monto * 100))
+            ) {
 
-                    await mostrarError(
-                        resultado.mensaje ||
-                        "No fue posible realizar el pago."
-                    );
+                await Swal.fire({
+                    title: "Monto incorrecto",
+                    text: "El monto ingresado no es válido.",
+                    icon: "error",
+                    confirmButtonColor: "#ffcc00"
+                });
 
-                    console.error(
-                        "Error al procesar pago:",
-                        resultado
-                    );
+                return;
 
-                    return;
-                }
+            }
 
+            const nombreServicio = serviciosPermitidos[servicio];
 
-                // ==============================
-                // 17. OBTENER NUEVO SALDO
-                // ==============================
+            // ==================================
+            // 7. VERIFICAR FONDOS DISPONIBLES
+            // ==================================
 
-                const nuevoSaldo =
-                    Banco.obtenerSaldo();
+            const saldoDisponible = Banco.obtenerSaldo();
 
+            if (monto > saldoDisponible) {
 
-                // ==============================
-                // 18. REGISTRAR EN CONSOLA
-                // ==============================
-
-                console.log(
-                    "Pago realizado correctamente."
-                );
-
-                console.log(
-                    "Servicio:",
-                    nombreServicio
-                );
-
-                console.log(
-                    "Referencia:",
-                    referencia
-                );
-
-                console.log(
-                    "Monto pagado:",
-                    monto.toFixed(2)
-                );
-
-                console.log(
-                    "Saldo anterior:",
-                    saldoAnterior.toFixed(2)
-                );
-
-                console.log(
-                    "Nuevo saldo:",
-                    nuevoSaldo.toFixed(2)
-                );
-
-
-                // ==============================
-                // 19. MOSTRAR RESULTADO
-                // ==============================
-
-                const resultadoVisual =
-                    await Swal.fire({
-
-                        icon: "success",
-
-                        title: "¡Pago exitoso!",
-
-html:
-    "<strong>Servicio:</strong> " +
-    servicioSeguro +
-    "<br>" +
-
-    "<strong>Referencia:</strong> " +
-    referenciaSegura +
-    "<br><br>" +
-
-                            "<strong>Monto pagado:</strong> $" +
-                            monto.toFixed(2) +
-                            "<br>" +
-
-                            "<strong>Nuevo saldo:</strong> $" +
-                            nuevoSaldo.toFixed(2) +
-                            "<br><br>" +
-
-                            "¿Deseas descargar el comprobante PDF?",
-
-                        showCancelButton: true,
-
-                        confirmButtonText:
-                            "Descargar comprobante",
-
-                        cancelButtonText:
-                            "Finalizar",
-
-                        confirmButtonColor:
-                            "#ffcc00",
-
-                        cancelButtonColor:
-                            "#6c757d",
-
-                        allowOutsideClick: false
-
-                    });
-
-
-                // ==============================
-                // 20. GENERAR COMPROBANTE
-                // ==============================
-
-                if (resultadoVisual.isConfirmed) {
-
-                    if (
-                        typeof Comprobantes !== "undefined" &&
-                        typeof Comprobantes.generar === "function"
-                    ) {
-
-                        const descripcion =
-                            "Pago de " +
-                            nombreServicio +
-                            " - Ref: " +
-                            referencia;
-
-
-                        const generado =
-                            Comprobantes.generar(
-
-                                "Servicio",
-
-                                monto,
-
-                                nuevoSaldo,
-
-                                descripcion,
-
-                                saldoAnterior
-
-                            );
-
-
-                        if (!generado) {
-
-                            await Swal.fire({
-
-                                icon: "warning",
-
-                                title:
-                                    "Comprobante no disponible",
-
-                                text:
-                                    "El pago fue registrado " +
-                                    "correctamente, pero no se " +
-                                    "pudo generar el PDF.",
-
-                                confirmButtonText:
-                                    "Aceptar"
-
-                            });
-
-                        }
-
-                    } else {
-
-                        console.error(
-                            "El módulo de comprobantes no está disponible."
-                        );
-
-                        await Swal.fire({
-
-                            icon: "warning",
-
-                            title:
-                                "Comprobante no disponible",
-
-                            text:
-                                "El pago fue registrado " +
-                                "correctamente, pero el módulo " +
-                                "de comprobantes no está disponible.",
-
-                            confirmButtonText:
-                                "Aceptar"
-
-                        });
-
-                    }
-
-                }
-
-
-                // ==============================
-                // 21. REGRESAR AL DASHBOARD
-                // ==============================
-
-                window.location.href =
-                    "dashboard.html";
-
-
-            } catch (error) {
-
-                console.error(
-                    "Error durante el procesamiento del pago:",
-                    error
+                mostrarMensaje(
+                    "Saldo insuficiente para realizar el pago.",
+                    "danger"
                 );
 
                 await Swal.fire({
 
-                    icon: "error",
+                    title: "Saldo insuficiente",
 
-                    title: "Error del sistema",
+                    text: "Tu saldo disponible es " +
+                          formatearMonto(saldoDisponible) +
+                          ".",
 
-                    text:
-                        "Ocurrió un error durante el proceso. " +
-                        "Consulta el historial antes de " +
-                        "intentar nuevamente.",
+                    icon: "warning",
 
-                    confirmButtonText: "Aceptar"
+                    confirmButtonText: "Aceptar",
+                    confirmButtonColor: "#ffcc00"
 
                 });
 
-            } finally {
-
-                procesandoPago = false;
+                return;
 
             }
 
+            Transacciones.bloquearFormulario(formulario, true);
+
+            // ==================================
+            // 8. CONFIRMACIÓN INTERACTIVA
+            // ==================================
+
+            const confirmacion = await Swal.fire({
+
+                title: "Confirmar pago de servicio",
+
+                html:
+                    "<strong>Servicio:</strong> " +
+                    Transacciones.escaparHTML(nombreServicio) +
+                    "<br>" +
+                    "<strong>Referencia:</strong> " +
+                    Transacciones.escaparHTML(referencia) +
+                    "<br>" +
+                    "<strong>Monto:</strong> " +
+                    formatearMonto(monto) +
+                    "<br><br>" +
+                    "¿Deseas confirmar esta operación?",
+
+                icon: "question",
+
+                showCancelButton: true,
+
+                confirmButtonText: "Confirmar pago",
+                cancelButtonText: "Cancelar",
+
+                confirmButtonColor: "#ffcc00",
+                cancelButtonColor: "#6c757d",
+
+                reverseButtons: true
+
+            });
+
+            if (!confirmacion.isConfirmed) {
+                return;
+            }
+
+            // ==================================
+            // 9. EJECUTAR OPERACIÓN BANCARIA
+            // ==================================
+
+            const resultado = Banco.pagarServicio(
+                servicio,
+                referencia,
+                monto
+            );
+
+            if (!resultado || !resultado.exito) {
+
+                const detalle = resultado && resultado.mensaje
+                    ? resultado.mensaje
+                    : "No fue posible realizar el pago.";
+
+                mostrarMensaje(detalle, "danger");
+
+                await Swal.fire({
+                    title: "Pago rechazado",
+                    text: detalle,
+                    icon: "error",
+                    confirmButtonColor: "#ffcc00"
+                });
+
+                return;
+
+            }
+
+            const saldoActual = Banco.obtenerSaldo();
+
+            // ==================================
+            // 10. MOSTRAR RESULTADO
+            // ==================================
+
+            mostrarMensaje(
+                "Pago exitoso de " +
+                nombreServicio +
+                ". Monto: " +
+                formatearMonto(monto) +
+                ". Nuevo saldo: " +
+                formatearMonto(saldoActual),
+                "success"
+            );
+
+            formulario.reset();
+
+            console.log(
+                "Pokémon Bank - Pago registrado:",
+                nombreServicio,
+                monto.toFixed(2)
+            );
+
+            console.log(
+                "Pokémon Bank - Nuevo saldo:",
+                Number(saldoActual).toFixed(2)
+            );
+
+            // ==================================
+            // 11. OFRECER COMPROBANTE PDF
+            // ==================================
+
+            const respuesta = await Swal.fire({
+
+                title: "¡Pago exitoso!",
+
+                html:
+                    "<strong>Servicio:</strong> " +
+                    Transacciones.escaparHTML(nombreServicio) +
+                    "<br>" +
+                    "<strong>Referencia:</strong> " +
+                    Transacciones.escaparHTML(referencia) +
+                    "<br>" +
+                    "<strong>Monto pagado:</strong> " +
+                    formatearMonto(monto) +
+                    "<br>" +
+                    "<strong>Nuevo saldo:</strong> " +
+                    formatearMonto(saldoActual) +
+                    "<br><br>" +
+                    "¿Deseas descargar el comprobante PDF?",
+
+                icon: "success",
+
+                showCancelButton: true,
+
+                confirmButtonText: "Descargar comprobante",
+                cancelButtonText: "Finalizar",
+
+                confirmButtonColor: "#ffcc00",
+                cancelButtonColor: "#6c757d"
+
+            });
+
+            // ==================================
+            // 12. GENERAR COMPROBANTE
+            // ==================================
+
+            if (respuesta.isConfirmed) {
+
+                try {
+
+                    if (
+                        typeof Comprobantes === "undefined" ||
+                        typeof Comprobantes.generar !== "function"
+                    ) {
+                        throw new Error("Módulo PDF no disponible.");
+                    }
+
+                    const generado = Comprobantes.generar(
+                        "Servicio",
+                        monto,
+                        saldoActual,
+                        "Pago de " +
+                        nombreServicio +
+                        " - Ref: " +
+                        referencia
+                    );
+
+                    if (generado === false) {
+                        throw new Error("No se generó el comprobante.");
+                    }
+
+                } catch (errorPDF) {
+
+                    console.error(
+                        "Pokémon Bank - Error de comprobante:",
+                        errorPDF
+                    );
+
+                    await Swal.fire({
+                        title: "Comprobante no disponible",
+                        text: "El pago fue registrado correctamente, pero no fue posible generar el PDF.",
+                        icon: "warning",
+                        confirmButtonColor: "#ffcc00"
+                    });
+
+                }
+
+            }
+
+        } catch (error) {
+
+            console.error(
+                "Pokémon Bank - Error durante el pago:",
+                error
+            );
+
+            mostrarMensaje(
+                "Ocurrió un error. Verifica el saldo y el historial antes de intentar nuevamente.",
+                "danger"
+            );
+
+            await Swal.fire({
+                title: "Error de procesamiento",
+                text: "Verifica el saldo y el historial antes de repetir la operación.",
+                icon: "error",
+                confirmButtonColor: "#ffcc00"
+            });
+
+        } finally {
+
+            procesando = false;
+
+            Transacciones.bloquearFormulario(formulario, false);
+
         }
-    );
 
-
-    // ==========================================
-    // 22. CONFIRMAR CARGA DEL MODULO
-    // ==========================================
-
-    console.log(
-        "Pokémon Bank - Módulo de servicios cargado correctamente."
-    );
+    });
 
 });

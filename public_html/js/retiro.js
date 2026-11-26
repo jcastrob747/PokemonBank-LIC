@@ -1,14 +1,9 @@
 /*
- * Pokémon Bank
+ * Pokémon Bank - Fase 2
  * Archivo: retiro.js
  *
  * Procesamiento de retiros bancarios.
- *
- * Integración:
- * - SweetAlert2
- * - jsPDF mediante comprobantes.js
- *
- * Simulador bancario académico.
+ * Validación de montos y fondos disponibles.
  */
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -16,47 +11,82 @@ document.addEventListener("DOMContentLoaded", function () {
     "use strict";
 
     // ==========================================
-    // 1. OBTENER ELEMENTOS DEL FORMULARIO
+    // 1. ELEMENTOS DE LA INTERFAZ
     // ==========================================
 
     const formulario = document.getElementById("formRetiro");
-
     const campoMonto = document.getElementById("montoRetiro");
+    const mensaje = document.getElementById("mensajeRetiro");
 
-    // ==========================================
-    // 2. VERIFICAR ELEMENTOS
-    // ==========================================
-
-    if (!formulario || !campoMonto) {
-
-        console.error(
-            "No se encontraron los elementos del formulario de retiro."
-        );
-
+    if (!formulario || !campoMonto || !mensaje) {
+        console.error("Pokémon Bank - Formulario de retiro incompleto.");
         return;
     }
 
-    // ==========================================
-    // 3. VERIFICAR MODULOS
-    // ==========================================
-
-    if (
-        typeof Banco === "undefined" ||
-        typeof Banco.retirar !== "function"
-    ) {
-
-        console.error(
-            "El módulo bancario no está disponible."
-        );
-
-        return;
-    }
-
-    // Evitar operaciones simultáneas
     let procesando = false;
 
     // ==========================================
-    // 4. PROCESAR FORMULARIO
+    // 2. FUNCIONES AUXILIARES
+    // ==========================================
+
+    function formatearMonto(monto) {
+        return "$" + Number(monto).toFixed(2);
+    }
+
+    function mostrarMensaje(texto, tipo) {
+
+        mensaje.textContent = texto;
+        mensaje.className = "mt-3 alert alert-" + tipo;
+
+    }
+
+    function limpiarMensaje() {
+
+        mensaje.textContent = "";
+        mensaje.className = "mt-3";
+
+    }
+
+    // ==========================================
+    // 3. INICIALIZACIÓN DEL MÓDULO
+    // ==========================================
+
+    try {
+
+        if (
+            typeof Banco === "undefined" ||
+            typeof Transacciones === "undefined" ||
+            typeof validate !== "function" ||
+            typeof Swal === "undefined"
+        ) {
+            throw new Error("Dependencias del módulo no disponibles.");
+        }
+
+        Transacciones.cargarUsuario();
+
+        console.log(
+            "Pokémon Bank - Módulo de retiros de Fase 2 inicializado."
+        );
+
+    } catch (error) {
+
+        console.error("Pokémon Bank - Error de inicialización:", error);
+
+        mostrarMensaje(
+            "No fue posible inicializar el módulo de retiros.",
+            "danger"
+        );
+
+        formulario.querySelectorAll("input, button").forEach(function (elemento) {
+            elemento.disabled = true;
+        });
+
+        return;
+
+    }
+
+    // ==========================================
+    // 4. PROCESAMIENTO DEL FORMULARIO
     // ==========================================
 
     formulario.addEventListener("submit", async function (evento) {
@@ -67,140 +97,128 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        // ======================================
-        // 5. OBTENER MONTO
-        // ======================================
-
-        const monto = Number(campoMonto.value);
-
-        // ======================================
-        // 6. VALIDAR MONTO
-        // ======================================
-
-        if (
-            campoMonto.value.trim() === "" ||
-            !Number.isFinite(monto) ||
-            monto <= 0
-        ) {
-
-            await Swal.fire({
-
-                title: "Monto incorrecto",
-
-                text: "Ingresa un monto válido mayor a $0.00.",
-
-                icon: "error",
-
-                confirmButtonText: "Aceptar",
-
-                confirmButtonColor: "#ffcc00"
-
-            });
-
-            campoMonto.focus();
-
-            return;
-        }
-
-        // Validar máximo dos decimales
-
-        if (
-            Math.abs(
-                monto * 100 - Math.round(monto * 100)
-            ) > 0.000001
-        ) {
-
-            await Swal.fire({
-
-                title: "Monto incorrecto",
-
-                text: "El monto debe contener como máximo dos decimales.",
-
-                icon: "error",
-
-                confirmButtonText: "Aceptar",
-
-                confirmButtonColor: "#ffcc00"
-
-            });
-
-            campoMonto.focus();
-
-            return;
-        }
-
-        // ======================================
-        // 7. CONSULTAR SALDO DISPONIBLE
-        // ======================================
-
-        const saldoDisponible = Banco.obtenerSaldo();
-
-        // ======================================
-        // 8. VERIFICAR FONDOS
-        // ======================================
-
-        if (monto > saldoDisponible) {
-
-            await Swal.fire({
-
-                title: "Saldo insuficiente",
-
-                html:
-                    "No tienes fondos suficientes para realizar este retiro." +
-                    "<br><br>" +
-                    "<strong>Saldo disponible:</strong> $" +
-                    saldoDisponible.toFixed(2),
-
-                icon: "warning",
-
-                confirmButtonText: "Aceptar",
-
-                confirmButtonColor: "#ffcc00"
-
-            });
-
-            campoMonto.focus();
-
-            return;
-        }
-
-        // ======================================
-        // 9. CONFIRMAR OPERACION
-        // ======================================
-
         procesando = true;
 
-        let retiroRegistrado = false;
+        limpiarMensaje();
 
         try {
 
-            if (typeof Swal !== "function") {
-                console.error("SweetAlert2 no está disponible.");
+            // ==================================
+            // 5. VALIDACIÓN MEDIANTE VALIDATE.JS
+            // ==================================
+
+            const valor = campoMonto.value.trim();
+
+            const errores = validate(
+                {
+                    monto: valor
+                },
+                {
+                    monto: {
+                        presence: {
+                            allowEmpty: false,
+                            message: "^Ingresa el monto del retiro."
+                        },
+                        numericality: {
+                            greaterThan: 0,
+                            message: "^El monto debe ser mayor a $0.00."
+                        },
+                        format: {
+                            pattern: /^\d+(\.\d{1,2})?$/,
+                            message: "^Ingresa un monto con un máximo de dos decimales."
+                        }
+                    }
+                }
+            );
+
+            if (errores) {
+
+                await Swal.fire({
+                    title: "Monto incorrecto",
+                    text: errores.monto[0],
+                    icon: "error",
+                    confirmButtonText: "Aceptar",
+                    confirmButtonColor: "#ffcc00"
+                });
+
+                campoMonto.focus();
+
                 return;
+
             }
+
+            const monto = Number(valor);
+
+            if (
+                !Number.isFinite(monto) ||
+                !Number.isSafeInteger(Math.round(monto * 100))
+            ) {
+
+                await Swal.fire({
+                    title: "Monto incorrecto",
+                    text: "El monto ingresado no es válido.",
+                    icon: "error",
+                    confirmButtonColor: "#ffcc00"
+                });
+
+                return;
+
+            }
+
+            // ==================================
+            // 6. VERIFICAR FONDOS DISPONIBLES
+            // ==================================
+
+            const saldoDisponible = Banco.obtenerSaldo();
+
+            if (monto > saldoDisponible) {
+
+                mostrarMensaje(
+                    "Saldo insuficiente para realizar el retiro.",
+                    "danger"
+                );
+
+                await Swal.fire({
+
+                    title: "Saldo insuficiente",
+
+                    text: "Tu saldo disponible es " +
+                          formatearMonto(saldoDisponible) +
+                          ".",
+
+                    icon: "warning",
+
+                    confirmButtonText: "Aceptar",
+                    confirmButtonColor: "#ffcc00"
+
+                });
+
+                return;
+
+            }
+
+            Transacciones.bloquearFormulario(formulario, true);
+
+            // ==================================
+            // 7. CONFIRMACIÓN INTERACTIVA
+            // ==================================
 
             const confirmacion = await Swal.fire({
 
                 title: "Confirmar retiro",
 
-                html:
-                    "¿Deseas retirar <strong>$" +
-                    monto.toFixed(2) +
-                    "</strong> de tu cuenta?" +
-                    "<br><br>" +
-                    "<strong>Saldo actual:</strong> $" +
-                    saldoDisponible.toFixed(2),
+                text: "¿Deseas retirar " +
+                      formatearMonto(monto) +
+                      " de tu cuenta?",
 
                 icon: "question",
 
                 showCancelButton: true,
 
-                confirmButtonText: "Sí, retirar",
-
+                confirmButtonText: "Confirmar retiro",
                 cancelButtonText: "Cancelar",
 
                 confirmButtonColor: "#ffcc00",
-
                 cancelButtonColor: "#6c757d",
 
                 reverseButtons: true
@@ -208,71 +226,62 @@ document.addEventListener("DOMContentLoaded", function () {
             });
 
             if (!confirmacion.isConfirmed) {
-
-                console.log(
-                    "El usuario canceló el retiro."
-                );
-
                 return;
             }
 
             // ==================================
-            // 10. REALIZAR RETIRO
+            // 8. EJECUTAR OPERACIÓN BANCARIA
             // ==================================
 
             const resultado = Banco.retirar(monto);
 
-            // ==================================
-            // 11. VERIFICAR RESULTADO
-            // ==================================
+            if (!resultado || !resultado.exito) {
 
-            if (!resultado.exito) {
+                const detalle = resultado && resultado.mensaje
+                    ? resultado.mensaje
+                    : "No fue posible realizar el retiro.";
+
+                mostrarMensaje(detalle, "danger");
 
                 await Swal.fire({
-
-                    title: "No se pudo realizar el retiro",
-
-                    text:
-                        resultado.mensaje ||
-                        "Ocurrió un error durante la operación.",
-
+                    title: "Retiro rechazado",
+                    text: detalle,
                     icon: "error",
-
-                    confirmButtonText: "Aceptar",
-
                     confirmButtonColor: "#ffcc00"
-
                 });
 
                 return;
+
             }
 
-            retiroRegistrado = true;
-
-            const nuevoSaldo = resultado.saldo;
+            const saldoActual = Banco.obtenerSaldo();
 
             // ==================================
-            // 12. REGISTRAR INFORMACION
+            // 9. MOSTRAR RESULTADO
             // ==================================
 
-            console.log(
-                "Retiro realizado correctamente."
-            );
-
-            console.log(
-                "Monto retirado:",
-                monto.toFixed(2)
-            );
-
-            console.log(
-                "Nuevo saldo:",
-                nuevoSaldo.toFixed(2)
+            mostrarMensaje(
+                "Retiro exitoso. Monto: " +
+                formatearMonto(monto) +
+                ". Nuevo saldo: " +
+                formatearMonto(saldoActual),
+                "success"
             );
 
             formulario.reset();
 
+            console.log(
+                "Pokémon Bank - Retiro registrado:",
+                monto.toFixed(2)
+            );
+
+            console.log(
+                "Pokémon Bank - Nuevo saldo:",
+                Number(saldoActual).toFixed(2)
+            );
+
             // ==================================
-            // 13. CONFIRMACION Y COMPROBANTE
+            // 10. OFRECER COMPROBANTE PDF
             // ==================================
 
             const respuesta = await Swal.fire({
@@ -280,11 +289,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 title: "¡Retiro exitoso!",
 
                 html:
-                    "<strong>Monto retirado:</strong> $" +
-                    monto.toFixed(2) +
+                    "<strong>Monto retirado:</strong> " +
+                    formatearMonto(monto) +
                     "<br>" +
-                    "<strong>Nuevo saldo:</strong> $" +
-                    nuevoSaldo.toFixed(2) +
+                    "<strong>Nuevo saldo:</strong> " +
+                    formatearMonto(saldoActual) +
                     "<br><br>" +
                     "¿Deseas descargar el comprobante PDF?",
 
@@ -293,122 +302,84 @@ document.addEventListener("DOMContentLoaded", function () {
                 showCancelButton: true,
 
                 confirmButtonText: "Descargar comprobante",
-
                 cancelButtonText: "Finalizar",
 
                 confirmButtonColor: "#ffcc00",
-
                 cancelButtonColor: "#6c757d"
 
             });
 
             // ==================================
-            // 14. GENERAR COMPROBANTE PDF
+            // 11. GENERAR COMPROBANTE
             // ==================================
 
             if (respuesta.isConfirmed) {
 
-                if (
-                    typeof Comprobantes !== "undefined" &&
-                    typeof Comprobantes.generar === "function"
-                ) {
+                try {
 
-                    const generado = Comprobantes.generar(
-
-                        "Retiro",
-
-                        monto,
-
-                        nuevoSaldo,
-
-                        "Retiro de efectivo"
-
-                    );
-
-                    if (!generado) {
-
-                        await Swal.fire({
-
-                            title: "Comprobante no disponible",
-
-                            text:
-                                "El retiro fue registrado correctamente, " +
-                                "pero no se pudo generar el PDF.",
-
-                            icon: "warning",
-
-                            confirmButtonText: "Aceptar"
-
-                        });
-
+                    if (
+                        typeof Comprobantes === "undefined" ||
+                        typeof Comprobantes.generar !== "function"
+                    ) {
+                        throw new Error("Módulo PDF no disponible.");
                     }
 
-                } else {
+                    const generado = Comprobantes.generar(
+                        "Retiro",
+                        monto,
+                        saldoActual,
+                        "Retiro de efectivo"
+                    );
+
+                    if (generado === false) {
+                        throw new Error("No se generó el comprobante.");
+                    }
+
+                } catch (errorPDF) {
+
+                    console.error(
+                        "Pokémon Bank - Error de comprobante:",
+                        errorPDF
+                    );
 
                     await Swal.fire({
-
                         title: "Comprobante no disponible",
-
-                        text:
-                            "El retiro fue registrado, pero el módulo " +
-                            "de comprobantes no está disponible.",
-
+                        text: "El retiro fue registrado correctamente, pero no fue posible generar el PDF.",
                         icon: "warning",
-
-                        confirmButtonText: "Aceptar"
-
+                        confirmButtonColor: "#ffcc00"
                     });
 
                 }
 
             }
 
-            // ==================================
-            // 15. REGRESAR AL DASHBOARD
-            // ==================================
-
-            window.location.href = "dashboard.html";
-
         } catch (error) {
 
             console.error(
-                "Error durante el procesamiento del retiro:",
+                "Pokémon Bank - Error durante el retiro:",
                 error
             );
 
-            if (retiroRegistrado) {
+            mostrarMensaje(
+                "Ocurrió un error. Verifica el saldo y el historial antes de intentar nuevamente.",
+                "danger"
+            );
 
-                alert(
-                    "El retiro fue registrado, pero ocurrió un error " +
-                    "al mostrar la confirmación o generar el comprobante. " +
-                    "Verifica el historial antes de intentar nuevamente."
-                );
-
-                window.location.href = "dashboard.html";
-
-            } else {
-
-                alert(
-                    "No se pudo completar el proceso. " +
-                    "Verifica el saldo y el historial antes de reintentar."
-                );
-
-            }
+            await Swal.fire({
+                title: "Error de procesamiento",
+                text: "Verifica el saldo y el historial antes de repetir la operación.",
+                icon: "error",
+                confirmButtonColor: "#ffcc00"
+            });
 
         } finally {
 
             procesando = false;
 
+            Transacciones.bloquearFormulario(formulario, false);
+
         }
 
     });
-
-    // ==========================================
-    // 16. CONFIRMAR CARGA DEL MODULO
-    // ==========================================
-
-    console.log(
-        "Pokémon Bank - Módulo de retiros cargado correctamente."
-    );
 
 });
